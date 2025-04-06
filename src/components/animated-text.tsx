@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
 
 interface AnimatedTextProps {
   text: string;
-  el?: keyof JSX.IntrinsicElements; // Allow specifying the element type (h1, p, etc.)
+  el?: React.ElementType; // Change type to React.ElementType
   className?: string;
   once?: boolean; // Only animate once
   amount?: number; // Trigger threshold (0 to 1)
