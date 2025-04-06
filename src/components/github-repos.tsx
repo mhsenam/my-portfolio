@@ -139,7 +139,10 @@ export async function GitHubRepos({ username }: { username: string }) {
         {repos.map((repo) => (
           <Card
             key={repo.id}
-            className="flex flex-col justify-between hover:shadow-md transition-shadow"
+            className="group relative overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow
+                       before:absolute before:inset-0 before:-translate-x-full 
+                       group-hover:before:animate-[shimmer_1.5s_ease-out] /* Animate only on hover */
+                       before:bg-gradient-to-r before:from-transparent before:via-primary/10 before:to-transparent"
           >
             <CardHeader>
               <CardTitle className="text-xl flex justify-between items-center">

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function AnimatedDottedBackground() {
   return (
-    <div className="opacity-20 fixed inset-0 -z-10 h-full w-full bg-background">
+    <div className="opacity-10 fixed inset-0 -z-10 h-full w-full bg-background">
       <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
         <defs>
           <pattern

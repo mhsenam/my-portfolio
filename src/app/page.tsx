@@ -2,9 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  BrainCircuit,
-  Code,
-  Bot,
+  Network,
+  Rocket,
+  Lightbulb,
   Mail,
   Github,
   Linkedin,
@@ -14,6 +14,8 @@ import Link from "next/link";
 import { GitHubRepos } from "@/components/github-repos"; // Import the new component
 import { AnimatedText } from "@/components/animated-text"; // Import AnimatedText
 import { ContactPopover } from "@/components/contact-popover"; // Import the popover
+import { AnimatedCard } from "@/components/animated-card"; // Import AnimatedCard
+import { AnimatedHero } from "@/components/animated-hero"; // Import AnimatedHero
 
 // Function to fetch GitHub user data
 async function getGitHubUser(username: string) {
@@ -47,33 +49,32 @@ export default async function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-16 md:p-24 bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-16 space-y-16 sm:space-y-24">
-        {/* Hero Section */}
-        <section className="text-center space-y-6">
-          <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto border-4 border-primary shadow-lg">
-            <AvatarImage
-              src={avatarUrl} // Use the dynamic avatar URL
-              alt={username} // Use username for alt text
-            />
-            {/* Fallback initials */}
+        {/* Hero Section - Wrap with AnimatedHero */}
+        <AnimatedHero className="text-center space-y-6">
+          {/* Add hero-avatar class */}
+          <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto border-4 border-primary shadow-lg hero-avatar">
+            <AvatarImage src={avatarUrl} alt={username} />
             <AvatarFallback>
               {username.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
+          {/* Add hero-headline class */}
           <AnimatedText
             el="h1"
             text="Mohsen Amini: AI Specialist & Innovator"
-            className="text-4xl sm:text-5xl font-bold tracking-tight text-primary"
+            className="text-4xl sm:text-5xl font-bold tracking-tight text-primary hero-headline"
             colorful={true}
             wordAnimation={true}
             staggerChildren={0.15}
           />
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          {/* Add hero-paragraph class */}
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto hero-paragraph">
             Hi, I&apos;m Mohsen Amini. I leverage artificial intelligence to
             solve complex problems and drive business growth. Explore the future
             of AI with me.
           </p>
-          {/* Social Links */}
-          <div className="flex justify-center space-x-4 pt-2">
+          {/* Social Links - Add hero-social class to container */}
+          <div className="flex justify-center space-x-4 pt-2 hero-social">
             <Link
               href="https://www.linkedin.com/in/mhsenam/"
               target="_blank"
@@ -102,8 +103,13 @@ export default async function Home() {
               </Button>
             </Link>
           </div>
-          <ContactPopover />
-        </section>
+          {/* Add hero-popover class to Popover container (might need adjustment if structure changes) */}
+          <div className="hero-popover inline-block">
+            {" "}
+            {/* Added wrapper div for targeting */}
+            <ContactPopover />
+          </div>
+        </AnimatedHero>
 
         {/* Features Section */}
         <section className="text-center">
@@ -114,42 +120,50 @@ export default async function Home() {
             wordAnimation={true}
           />
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <BrainCircuit className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-                <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                  Machine Learning Models
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Developing and deploying bespoke ML models tailored to your
-                specific data and challenges.
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Code className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-                <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                  AI-Powered Applications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Building intelligent applications that automate processes and
-                provide insightful analytics.
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Bot className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-                <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                  AI Strategy & Consulting
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Guiding businesses on integrating AI effectively to achieve
-                strategic objectives.
-              </CardContent>
-            </Card>
+            <AnimatedCard index={0}>
+              <Card className="hover:shadow-lg transition-shadow h-full">
+                <CardHeader>
+                  <Network className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
+                  <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
+                    Machine Learning Models
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-muted-foreground">
+                  Developing and deploying bespoke ML models tailored to your
+                  specific data and challenges.
+                </CardContent>
+              </Card>
+            </AnimatedCard>
+
+            <AnimatedCard index={1}>
+              <Card className="hover:shadow-lg transition-shadow h-full">
+                <CardHeader>
+                  <Rocket className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
+                  <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
+                    AI-Powered Applications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-muted-foreground">
+                  Building intelligent applications that automate processes and
+                  provide insightful analytics.
+                </CardContent>
+              </Card>
+            </AnimatedCard>
+
+            <AnimatedCard index={2}>
+              <Card className="hover:shadow-lg transition-shadow h-full">
+                <CardHeader>
+                  <Lightbulb className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
+                  <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
+                    AI Strategy & Consulting
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-muted-foreground">
+                  Guiding businesses on integrating AI effectively to achieve
+                  strategic objectives.
+                </CardContent>
+              </Card>
+            </AnimatedCard>
           </div>
         </section>
 
@@ -161,7 +175,7 @@ export default async function Home() {
             className="text-3xl sm:text-4xl font-bold text-primary"
             wordAnimation={true}
           />
-          <p className="text-base sm:text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground text-justify leading-relaxed">
             I&apos;m Mohsen Amini, a front-end developer passionate about
             blending high-performance web development with the power of
             Artificial Intelligence. I specialize in integrating AI into
