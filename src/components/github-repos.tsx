@@ -9,41 +9,109 @@ import {
 import Link from "next/link";
 import { Star, GitFork, ExternalLink } from "lucide-react";
 
+// Function to extract first paragraph (basic summary)
+function summarizeReadme(markdown: string | null): string | null {
+  if (!markdown) return null;
+  // Remove front matter (if any)
+  markdown = markdown.replace(/^---[\s\S]*?---/, "");
+  // Find first meaningful paragraph (skip empty lines, headers, horizontal rules, etc.)
+  const lines = markdown.split("\n");
+  let summary = "";
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (
+      trimmedLine &&
+      !trimmedLine.startsWith("#") &&
+      !trimmedLine.startsWith("-") &&
+      !trimmedLine.startsWith("=") &&
+      !trimmedLine.startsWith(">") &&
+      !trimmedLine.startsWith("!") &&
+      !trimmedLine.startsWith("[")
+    ) {
+      summary = trimmedLine;
+      break;
+    }
+  }
+  // Limit length
+  return summary.length > 150
+    ? summary.substring(0, 150) + "..."
+    : summary || null;
+}
+
 interface GitHubRepo {
   id: number;
   name: string;
+  owner: { login: string }; // Need owner login for README fetch
   html_url: string;
   description: string | null;
   stargazers_count: number;
   forks_count: number;
   language: string | null;
+  readmeSummary?: string | null; // Add readme summary field
 }
 
 async function getGitHubRepos(username: string): Promise<GitHubRepo[]> {
+  let repos: GitHubRepo[] = [];
   try {
-    const response = await fetch(
-      `https://api.github.com/users/${username}/repos?sort=updated&direction=desc&per_page=6`, // Fetch latest 6 repos
+    // Fetch initial repo list
+    const repoListResponse = await fetch(
+      `https://api.github.com/users/${username}/repos?sort=updated&direction=desc&per_page=6`,
       {
-        // Optional: Add revalidation if needed, e.g., next: { revalidate: 3600 } for hourly updates
-        cache: "no-store", // Ensures data is fetched fresh on every request
+        next: { revalidate: 3600 }, // Cache for 1 hour
+        headers: {
+          // Recommended header for GitHub API
+          Accept: "application/vnd.github.v3+json",
+        },
       }
     );
 
-    if (!response.ok) {
+    if (!repoListResponse.ok) {
       console.error(
-        `GitHub API Error: ${response.status} ${response.statusText}`
+        `GitHub API Error (Repo List): ${repoListResponse.status} ${repoListResponse.statusText}`
       );
-      // Optionally throw an error or return an empty array to handle gracefully
-      // throw new Error('Failed to fetch GitHub repositories');
       return [];
     }
 
-    const data = await response.json();
-    return data as GitHubRepo[];
+    repos = (await repoListResponse.json()) as GitHubRepo[];
+
+    // Fetch README for each repo
+    const readmePromises = repos.map(async (repo) => {
+      try {
+        const readmeResponse = await fetch(
+          `https://api.github.com/repos/${repo.owner.login}/${repo.name}/readme`,
+          {
+            next: { revalidate: 3600 }, // Cache for 1 hour
+            headers: {
+              // Request raw markdown content
+              Accept: "application/vnd.github.v3.raw",
+              // Alternative: 'application/vnd.github.v3+json' to get encoded content
+            },
+          }
+        );
+
+        if (readmeResponse.ok) {
+          const readmeContent = await readmeResponse.text(); // Get raw text
+          repo.readmeSummary = summarizeReadme(readmeContent);
+        } else {
+          console.warn(
+            `Could not fetch README for ${repo.name}: ${readmeResponse.status}`
+          );
+          repo.readmeSummary = null;
+        }
+      } catch (readmeError) {
+        console.error(`Error fetching README for ${repo.name}:`, readmeError);
+        repo.readmeSummary = null;
+      }
+      return repo;
+    });
+
+    // Wait for all README fetches to complete
+    repos = await Promise.all(readmePromises);
   } catch (error) {
     console.error("Failed to fetch repositories:", error);
     return []; // Return empty array on error
   }
+  return repos;
 }
 
 export async function GitHubRepos({ username }: { username: string }) {
@@ -85,8 +153,11 @@ export async function GitHubRepos({ username }: { username: string }) {
                   <ExternalLink className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
                 </Link>
               </CardTitle>
-              <CardDescription className="h-10 overflow-hidden text-ellipsis">
-                {repo.description || "No description provided."}
+              {/* Use readmeSummary first, then description, then fallback */}
+              <CardDescription className="h-16 text-sm overflow-hidden text-ellipsis">
+                {repo.readmeSummary ||
+                  repo.description ||
+                  "No description available."}
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -12,6 +12,7 @@ import {
 } from "lucide-react"; // Example icons
 import Link from "next/link";
 import { GitHubRepos } from "@/components/github-repos"; // Import the new component
+import { AnimatedText } from "@/components/animated-text"; // Import AnimatedText
 
 export default function Home() {
   return (
@@ -26,9 +27,14 @@ export default function Home() {
             />
             <AvatarFallback>MA</AvatarFallback>
           </Avatar>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
-            Mohsen Amini: AI Specialist & Innovator
-          </h1>
+          <AnimatedText
+            el="h1"
+            text="Mohsen Amini: AI Specialist & Innovator"
+            className="text-4xl sm:text-5xl font-bold tracking-tight text-primary"
+            colorful={true}
+            wordAnimation={true}
+            staggerChildren={0.15}
+          />
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Hi, I&apos;m Mohsen Amini. I leverage artificial intelligence to
             solve complex problems and drive business growth. Explore the future
@@ -70,50 +76,61 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="grid md:grid-cols-3 gap-8 text-center">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <BrainCircuit className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-              <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                Machine Learning Models
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground">
-              Developing and deploying bespoke ML models tailored to your
-              specific data and challenges.
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <Code className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-              <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                AI-Powered Applications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground">
-              Building intelligent applications that automate processes and
-              provide insightful analytics.
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <Bot className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-              <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                AI Strategy & Consulting
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground">
-              Guiding businesses on integrating AI effectively to achieve
-              strategic objectives.
-            </CardContent>
-          </Card>
+        <section className="text-center">
+          <AnimatedText
+            el="h2"
+            text="Core Services"
+            className="text-3xl sm:text-4xl font-bold text-primary mb-12"
+            wordAnimation={true}
+          />
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <BrainCircuit className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
+                <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
+                  Machine Learning Models
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground">
+                Developing and deploying bespoke ML models tailored to your
+                specific data and challenges.
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Code className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
+                <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
+                  AI-Powered Applications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground">
+                Building intelligent applications that automate processes and
+                provide insightful analytics.
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Bot className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
+                <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
+                  AI Strategy & Consulting
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground">
+                Guiding businesses on integrating AI effectively to achieve
+                strategic objectives.
+              </CardContent>
+            </Card>
+          </div>
         </section>
 
         {/* About Section */}
         <section className="text-center space-y-6 max-w-3xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary">
-            About Me
-          </h2>
+          <AnimatedText
+            el="h2"
+            text="About Me"
+            className="text-3xl sm:text-4xl font-bold text-primary"
+            wordAnimation={true}
+          />
           <p className="text-base sm:text-lg text-muted-foreground">
             I&apos;m Mohsen Amini, a front-end developer passionate about
             blending high-performance web development with the power of
@@ -131,9 +148,12 @@ export default function Home() {
 
         {/* Contact Section */}
         <section className="text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary">
-            Let&apos;s Collaborate
-          </h2>
+          <AnimatedText
+            el="h2"
+            text="Let's Collaborate"
+            className="text-3xl sm:text-4xl font-bold text-primary"
+            wordAnimation={true}
+          />
           <p className="text-base sm:text-lg text-muted-foreground">
             Interested in discussing an AI project or learning more about my
             services?

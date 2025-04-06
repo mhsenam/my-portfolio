@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./providers";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar";
+import { AnimatedDottedBackground } from "@/components/animated-background";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -31,8 +32,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <AnimatedDottedBackground />
           <Navbar />
-          <main className="pt-16">{children}</main>
+          <main className="pt-16 relative z-10">{children}</main>
         </ThemeProvider>
       </body>
     </html>
