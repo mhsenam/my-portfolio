@@ -13,8 +13,37 @@ import {
 import Link from "next/link";
 import { GitHubRepos } from "@/components/github-repos"; // Import the new component
 import { AnimatedText } from "@/components/animated-text"; // Import AnimatedText
+import { ContactPopover } from "@/components/contact-popover"; // Import the popover
 
-export default function Home() {
+// Function to fetch GitHub user data
+async function getGitHubUser(username: string) {
+  try {
+    const response = await fetch(`https://api.github.com/users/${username}`, {
+      next: { revalidate: 3600 }, // Cache for 1 hour
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+      },
+    });
+    if (!response.ok) {
+      console.error(
+        `GitHub API Error (User): ${response.status} ${response.statusText}`
+      );
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch GitHub user:", error);
+    return null;
+  }
+}
+
+// Make component async
+export default async function Home() {
+  const username = "mhsenam";
+  const githubUser = await getGitHubUser(username);
+  // Use fetched URL or fallback
+  const avatarUrl = githubUser?.avatar_url || "https://github.com/shadcn.png";
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-16 md:p-24 bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-16 space-y-16 sm:space-y-24">
@@ -22,10 +51,13 @@ export default function Home() {
         <section className="text-center space-y-6">
           <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto border-4 border-primary shadow-lg">
             <AvatarImage
-              src="https://github.com/shadcn.png"
-              alt="Mohsen Amini"
+              src={avatarUrl} // Use the dynamic avatar URL
+              alt={username} // Use username for alt text
             />
-            <AvatarFallback>MA</AvatarFallback>
+            {/* Fallback initials */}
+            <AvatarFallback>
+              {username.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
           <AnimatedText
             el="h1"
@@ -70,9 +102,7 @@ export default function Home() {
               </Button>
             </Link>
           </div>
-          <Button size="lg" className="text-lg mt-4 cursor-pointer">
-            Get In Touch
-          </Button>
+          <ContactPopover />
         </section>
 
         {/* Features Section */}
@@ -144,7 +174,7 @@ export default function Home() {
         </section>
 
         {/* GitHub Repos Section */}
-        <GitHubRepos username="mhsenam" />
+        <GitHubRepos username={username} />
 
         {/* Contact Section */}
         <section className="text-center space-y-6">
@@ -158,9 +188,11 @@ export default function Home() {
             Interested in discussing an AI project or learning more about my
             services?
           </p>
-          <Button variant="outline" size="lg" className="cursor-pointer">
-            <Mail className="mr-2 h-5 w-5" /> Contact Me
-          </Button>
+          <Link href="mailto:mohsenamini1081@gmail.com">
+            <Button variant="outline" size="lg" className="cursor-pointer">
+              <Mail className="mr-2 h-5 w-5" /> Contact Me
+            </Button>
+          </Link>
         </section>
       </div>
     </main>
