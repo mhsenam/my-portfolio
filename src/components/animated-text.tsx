@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   motion,
   useInView,
@@ -73,16 +74,16 @@ export const AnimatedText = ({
   // Map scroll progress to scale (e.g., 1 -> 1.25 -> 1)
   const scale = useTransform(
     scrollYProgress,
-    [0, 0.5, 1],       // Input range (start, middle, end of viewport)
-    [1, 1.25, 1]       // Output scale values
+    [0, 0.5, 1], // Input range (start, middle, end of viewport)
+    [1, 1.25, 1] // Output scale values
   );
-  
+
   // Map scroll progress to rotation (e.g., -2deg -> 0deg -> 2deg)
   const rotate = useTransform(
-      scrollYProgress,
-      [0, 1],
-      [-2, 2] // Rotate slightly as it scrolls
-  )
+    scrollYProgress,
+    [0, 1],
+    [-2, 2] // Rotate slightly as it scrolls
+  );
 
   useEffect(() => {
     if (isInView) {
@@ -99,10 +100,10 @@ export const AnimatedText = ({
     <Wrapper className={className} ref={ref}>
       {/* This outer span handles the scroll-linked scale and rotation */}
       <motion.span
-        style={{ 
-            scale, // Apply the transformed scale
-            rotate, // Apply the transformed rotation
-            display: 'inline-block' // Needed for transforms to apply correctly
+        style={{
+          scale, // Apply the transformed scale
+          rotate, // Apply the transformed rotation
+          display: "inline-block", // Needed for transforms to apply correctly
         }}
       >
         {/* This inner span handles the staggered entrance animation */}
@@ -114,7 +115,7 @@ export const AnimatedText = ({
             hidden: {},
           }}
           aria-hidden // Hide from screen readers as we read the whole text
-          style={{ display: 'inline-block' }} // Ensure inner span behaves correctly
+          style={{ display: "inline-block" }} // Ensure inner span behaves correctly
         >
           {textElements.map((element, index) => (
             <motion.span
