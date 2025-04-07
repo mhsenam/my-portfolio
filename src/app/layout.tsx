@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Poppins, Lato } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./providers";
-import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar";
 import { AnimatedDottedBackground } from "@/components/animated-background";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-poppins",
+});
+
+const lato = Lato({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-lato",
+});
 
 export const metadata: Metadata = {
-  title: "Mohsen Amini - AI Specialist",
-  description: "Portfolio of Mohsen Amini, AI Specialist & Innovator",
+  title: "Mohsen Amini - AI Specialist & Web Developer",
+  description: "Portfolio of Mohsen Amini, AI Specialist & Web Developer",
 };
 
 export default function RootLayout({
@@ -20,12 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.variable
-        )}
-      >
+      <body className={`${poppins.variable} ${lato.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

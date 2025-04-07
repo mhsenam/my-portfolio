@@ -1,21 +1,49 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Network,
-  Rocket,
-  Lightbulb,
-  Mail,
-  Github,
-  Linkedin,
-  Twitter,
-} from "lucide-react"; // Example icons
+import { Mail, Github, Linkedin, Twitter } from "lucide-react"; // Example icons
 import Link from "next/link";
 import { GitHubRepos } from "@/components/github-repos"; // Import the new component
 import { AnimatedText } from "@/components/animated-text"; // Import AnimatedText
 import { ContactPopover } from "@/components/contact-popover"; // Import the popover
 import { AnimatedCard } from "@/components/animated-card"; // Import AnimatedCard
 import { AnimatedHero } from "@/components/animated-hero"; // Import AnimatedHero
+import { ArticleCard } from "@/components/article-card"; // Import ArticleCard
+
+// Static data for example articles (same as in articles/page.tsx)
+const staticArticles = [
+  {
+    id: 1,
+    title: "The Future of AI in Web Development",
+    description:
+      "Exploring how AI is reshaping the landscape of creating websites and applications.",
+    tags: ["AI", "Web Development", "Future Tech"],
+    slug: "future-of-ai-in-web-dev",
+  },
+  {
+    id: 2,
+    title: "Getting Started with GSAP Animations",
+    description:
+      "A beginner's guide to creating smooth and performant animations with GSAP.",
+    tags: ["GSAP", "Animation", "JavaScript"],
+    slug: "getting-started-with-gsap",
+  },
+  {
+    id: 3,
+    title: "Building Modern UIs with shadcn/ui",
+    description:
+      "Leveraging shadcn/ui components for accessible and visually appealing interfaces.",
+    tags: ["shadcn/ui", "React", "UI/UX"],
+    slug: "building-with-shadcn-ui",
+  },
+  {
+    id: 4,
+    title: "Optimizing Next.js Apps",
+    description:
+      "Tips and tricks for improving the performance and speed of your Next.js applications.",
+    tags: ["Next.js", "Performance", "Optimization"],
+    slug: "optimizing-nextjs-apps",
+  },
+];
 
 // Function to fetch GitHub user data
 async function getGitHubUser(username: string) {
@@ -46,13 +74,16 @@ export default async function Home() {
   // Use fetched URL or fallback
   const avatarUrl = githubUser?.avatar_url || "https://github.com/shadcn.png";
 
+  // Get latest 3 articles
+  const latestArticles = staticArticles.slice(0, 3);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-16 md:p-24 bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-16 space-y-16 sm:space-y-24">
         {/* Hero Section - Wrap with AnimatedHero */}
         <AnimatedHero className="text-center space-y-6">
-          {/* Add hero-avatar class */}
-          <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto border-4 border-primary shadow-lg hero-avatar">
+          {/* Increase Avatar size */}
+          <Avatar className="w-32 h-32 sm:w-40 sm:h-40 mx-auto border-4 border-primary shadow-lg hero-avatar">
             <AvatarImage src={avatarUrl} alt={username} />
             <AvatarFallback>
               {username.substring(0, 2).toUpperCase()}
@@ -61,8 +92,8 @@ export default async function Home() {
           {/* Add hero-headline class */}
           <AnimatedText
             el="h1"
-            text="Mohsen Amini: AI Specialist & Innovator"
-            className="text-4xl sm:text-5xl font-bold tracking-tight text-primary hero-headline"
+            text="Mohsen Amini: AI Specialist & Web Developer"
+            className="text-4xl sm:text-5xl font-bold tracking-tight text-primary hero-headline font-heading"
             colorful={true}
             wordAnimation={true}
             staggerChildren={0.15}
@@ -111,59 +142,26 @@ export default async function Home() {
           </div>
         </AnimatedHero>
 
-        {/* Features Section */}
+        {/* Latest Articles Section */}
         <section className="text-center">
           <AnimatedText
             el="h2"
-            text="Core Services"
-            className="text-3xl sm:text-4xl font-bold text-primary mb-12"
+            text="Latest Articles"
+            className="text-3xl sm:text-4xl font-bold text-primary mb-12 font-heading"
             wordAnimation={true}
           />
           <div className="grid md:grid-cols-3 gap-8">
-            <AnimatedCard index={0}>
-              <Card className="hover:shadow-lg transition-shadow h-full">
-                <CardHeader>
-                  <Network className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-                  <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                    Machine Learning Models
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  Developing and deploying bespoke ML models tailored to your
-                  specific data and challenges.
-                </CardContent>
-              </Card>
-            </AnimatedCard>
-
-            <AnimatedCard index={1}>
-              <Card className="hover:shadow-lg transition-shadow h-full">
-                <CardHeader>
-                  <Rocket className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-                  <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                    AI-Powered Applications
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  Building intelligent applications that automate processes and
-                  provide insightful analytics.
-                </CardContent>
-              </Card>
-            </AnimatedCard>
-
-            <AnimatedCard index={2}>
-              <Card className="hover:shadow-lg transition-shadow h-full">
-                <CardHeader>
-                  <Lightbulb className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-primary" />
-                  <CardTitle className="mt-4 text-xl sm:text-2xl font-semibold">
-                    AI Strategy & Consulting
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-muted-foreground">
-                  Guiding businesses on integrating AI effectively to achieve
-                  strategic objectives.
-                </CardContent>
-              </Card>
-            </AnimatedCard>
+            {latestArticles.map((article, index) => (
+              <AnimatedCard key={article.id} index={index}>
+                <ArticleCard article={article} />
+              </AnimatedCard>
+            ))}
+          </div>
+          {/* Optional: Link to all articles */}
+          <div className="mt-12">
+            <Link href="/articles">
+              <Button variant="outline">View All Articles</Button>
+            </Link>
           </div>
         </section>
 
@@ -172,7 +170,7 @@ export default async function Home() {
           <AnimatedText
             el="h2"
             text="About Me"
-            className="text-3xl sm:text-4xl font-bold text-primary"
+            className="text-3xl sm:text-4xl font-bold text-primary font-heading"
             wordAnimation={true}
           />
           <p className="text-base sm:text-lg text-muted-foreground text-justify leading-relaxed">
@@ -195,7 +193,7 @@ export default async function Home() {
           <AnimatedText
             el="h2"
             text="Let's Collaborate"
-            className="text-3xl sm:text-4xl font-bold text-primary"
+            className="text-3xl sm:text-4xl font-bold text-primary font-heading"
             wordAnimation={true}
           />
           <p className="text-base sm:text-lg text-muted-foreground">

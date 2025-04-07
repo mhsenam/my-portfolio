@@ -47,9 +47,57 @@ export const AnimatedHero: React.FC<AnimatedHeroProps> = ({
       0.15
     );
 
+    // --- GSAP Hover Animation for Avatar ---
+    let hoverTween: gsap.core.Tween | null = null; // To store the hover tween
+
+    const handleMouseEnter = () => {
+      // Kill any existing hover tween to prevent overlap
+      if (hoverTween) {
+        hoverTween.kill();
+      }
+      // Wobble/Steam effect
+      hoverTween = gsap.to(avatar, {
+        scale: 1.05,
+        rotation: 5, // Rotate slightly
+        duration: 0.2,
+        ease: "power1.inOut",
+        yoyo: true, // Go back and forth
+        repeat: 3, // Repeat the wobble a few times
+        onComplete: () => {
+          // Ensure it returns exactly to the start state after wobbling
+          gsap.to(avatar, { scale: 1.03, rotation: 0, duration: 0.1 }); // Slightly larger final state on hover
+        },
+      });
+    };
+
+    const handleMouseLeave = () => {
+      // Kill the wobble tween immediately
+      if (hoverTween) {
+        hoverTween.kill();
+      }
+      // Return smoothly to default state
+      gsap.to(avatar, {
+        scale: 1,
+        rotation: 0,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    };
+
+    if (avatar) {
+      avatar.addEventListener("mouseenter", handleMouseEnter);
+      avatar.addEventListener("mouseleave", handleMouseLeave);
+    }
+    // --- End GSAP Hover ---
+
     // Cleanup
     return () => {
       tl.kill();
+      // Remove event listeners
+      if (avatar) {
+        avatar.removeEventListener("mouseenter", handleMouseEnter);
+        avatar.removeEventListener("mouseleave", handleMouseLeave);
+      }
     };
   }, []); // Run only once on mount
 
