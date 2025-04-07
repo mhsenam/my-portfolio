@@ -11,6 +11,9 @@ import {
   collection,
   addDoc,
   serverTimestamp,
+  query,
+  getDocs,
+  orderBy,
 } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -42,6 +45,16 @@ export interface Post {
   createdAt: Timestamp; // Keep as Firestore Timestamp initially
   likes: number;
   // Add other fields if needed, like commentCount
+}
+
+// Define the structure of a Reply object
+interface Reply {
+  id: string;
+  text: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string | null;
+  createdAt: Timestamp;
 }
 
 interface PostCardProps {
@@ -76,6 +89,11 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  // --- Add State for Replies ---
+  const [replies, setReplies] = useState<Reply[]>([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [hasFetchedReplies, setHasFetchedReplies] = useState(false); // Track if fetch has been attempted
 
   useEffect(() => {
     if (user) {
@@ -171,15 +189,78 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
       toast.success("Reply posted!");
       setReplyText("");
       setShowReplyInput(false);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error posting reply raw:", error);
-      const fbError = error as any;
+
+      let errorCode: string | undefined = undefined;
+      let errorMessage: string | undefined = undefined;
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Attempt to access Firebase specific 'code' property safely
+        if (typeof error === "object" && error !== null && "code" in error) {
+          // We know 'code' exists, but TS might not, so cast carefully if needed or access via index
+          try {
+            errorCode = (error as { code: string }).code;
+          } catch {
+            /* ignore casting error */
+          }
+        }
+      } else {
+        errorMessage = "An unknown error occurred while posting reply.";
+      }
+
       console.error(
-        `Firebase Error Code: ${fbError?.code}, Message: ${fbError?.message}`
+        `Firebase Error Code: ${errorCode || "N/A"}, Message: ${
+          errorMessage || "N/A"
+        }`
       );
       toast.error("Failed to post reply.");
     } finally {
       setIsSubmittingReply(false);
+    }
+  };
+
+  // --- Function to fetch replies ---
+  const fetchReplies = async () => {
+    if (!showReplies || hasFetchedReplies) return; // Don't fetch if already fetched or not showing
+
+    setRepliesLoading(true);
+    setHasFetchedReplies(true); // Mark as attempted fetch
+    const repliesRef = collection(db, "posts", post.id, "replies");
+    const q = query(repliesRef, orderBy("createdAt", "asc")); // Order replies oldest first
+
+    try {
+      const querySnapshot = await getDocs(q);
+      const fetchedReplies = querySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...(doc.data() as Omit<Reply, "id">),
+          } as Reply)
+      );
+      setReplies(fetchedReplies);
+    } catch (error) {
+      console.error("Error fetching replies:", error);
+      toast.error("Failed to load replies.");
+      setShowReplies(false); // Hide replies section on error
+      setHasFetchedReplies(false); // Allow refetch attempt
+    } finally {
+      setRepliesLoading(false);
+    }
+  };
+
+  // --- Function to toggle reply visibility and fetch ---
+  const toggleRepliesVisibility = () => {
+    const newState = !showReplies;
+    setShowReplies(newState);
+    // Fetch only when opening and if not fetched before
+    if (newState && !hasFetchedReplies) {
+      fetchReplies();
+    } else if (!newState) {
+      // Optional: Clear replies when hiding
+      // setReplies([]);
+      // setHasFetchedReplies(false);
     }
   };
 
@@ -243,7 +324,7 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
           </a>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-2 border-t pt-3 pb-3 bg-muted/50">
+      <CardFooter className="flex flex-col items-start space-y-3 border-t pt-3 pb-3 bg-muted/50">
         <div className="flex justify-start space-x-4 w-full">
           <Button
             variant="ghost"
@@ -266,6 +347,15 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
             onClick={handleReplyClick}
           >
             <MessageSquare className="h-4 w-4 mr-1.5" /> Reply
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-primary px-2 ml-auto"
+            onClick={toggleRepliesVisibility}
+            disabled={repliesLoading}
+          >
+            {showReplies ? "Hide Replies" : "Show Replies"}
           </Button>
         </div>
         {showReplyInput && (
@@ -302,6 +392,51 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
               </Button>
             </div>
           </form>
+        )}
+        {showReplies && (
+          <div className="w-full pt-3 border-t border-border/50">
+            {repliesLoading ? (
+              <div className="flex items-center justify-center p-4">
+                <p className="text-sm text-muted-foreground">
+                  Loading replies...
+                </p>
+              </div>
+            ) : replies.length === 0 ? (
+              <p className="text-sm text-muted-foreground px-1">
+                No replies yet.
+              </p>
+            ) : (
+              <div className="space-y-3 pl-1 pr-1 max-h-60 overflow-y-auto">
+                {replies.map((reply) => (
+                  <div
+                    key={reply.id}
+                    className="flex items-start space-x-3 text-sm"
+                  >
+                    <Avatar className="h-6 w-6 border mt-0.5">
+                      <AvatarImage
+                        src={reply.authorAvatar || undefined}
+                        alt={`${reply.authorName || "User"}'s avatar`}
+                      />
+                      <AvatarFallback>
+                        {reply.authorName?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 bg-background/50 p-2 rounded-md">
+                      <div className="flex items-baseline justify-between">
+                        <span className="font-medium text-xs">
+                          {reply.authorName || "Anonymous"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimestamp(reply.createdAt)}
+                        </span>
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap">{reply.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </CardFooter>
     </Card>
