@@ -8,6 +8,9 @@ import {
   getDoc,
   runTransaction,
   increment,
+  collection,
+  addDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -24,6 +27,7 @@ import {
 import { Button } from "./ui/button"; // For potential future actions
 import { ExternalLink, MessageSquare, ThumbsUp } from "lucide-react"; // Example icons
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 // Define the structure of a Post object
 export interface Post {
@@ -70,6 +74,8 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -129,6 +135,52 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
 
   const handleReplyClick = () => {
     setShowReplyInput(!showReplyInput);
+    setReplyText("");
+  };
+
+  const handleReplySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !user.uid) {
+      toast.error("You must be logged in to reply.");
+      return;
+    }
+    if (!replyText.trim()) {
+      toast.error("Reply cannot be empty.");
+      return;
+    }
+
+    setIsSubmittingReply(true);
+    const currentUserId = user.uid;
+    const repliesRef = collection(db, "posts", post.id, "replies");
+
+    const replyData = {
+      text: replyText.trim(),
+      authorId: currentUserId,
+      authorName: user.displayName || user.email || "Anonymous",
+      authorAvatar: user.photoURL || null,
+      createdAt: serverTimestamp(),
+    };
+
+    console.log(
+      "Attempting to submit reply:",
+      JSON.stringify(replyData, null, 2)
+    );
+
+    try {
+      await addDoc(repliesRef, replyData);
+      toast.success("Reply posted!");
+      setReplyText("");
+      setShowReplyInput(false);
+    } catch (error) {
+      console.error("Error posting reply raw:", error);
+      const fbError = error as any;
+      console.error(
+        `Firebase Error Code: ${fbError?.code}, Message: ${fbError?.message}`
+      );
+      toast.error("Failed to post reply.");
+    } finally {
+      setIsSubmittingReply(false);
+    }
   };
 
   return (
@@ -217,11 +269,39 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
           </Button>
         </div>
         {showReplyInput && (
-          <div className="w-full pt-2 pl-1 pr-1">
-            <p className="text-xs text-muted-foreground">
-              Replying to this post... (UI placeholder)
-            </p>
-          </div>
+          <form
+            onSubmit={handleReplySubmit}
+            className="w-full pt-2 pl-1 pr-1 space-y-2"
+          >
+            <Textarea
+              placeholder={`Replying as ${
+                user?.displayName || user?.email || "user"
+              }...`}
+              rows={3}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              disabled={isSubmittingReply}
+              className="text-sm"
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowReplyInput(false)}
+                disabled={isSubmittingReply}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmittingReply || !replyText.trim()}
+              >
+                {isSubmittingReply ? "Posting..." : "Post Reply"}
+              </Button>
+            </div>
+          </form>
         )}
       </CardFooter>
     </Card>
