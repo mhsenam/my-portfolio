@@ -10,7 +10,7 @@ import { auth } from "../lib/firebaseConfig"; // Trying path relative to src
 import { Button } from "@/components/ui/button"; // Import Button
 
 export function Navbar() {
-  const [user, loading] = useAuthState(auth); // Get user state
+  const [user] = useAuthState(auth); // Remove unused 'loading' variable
   const router = useRouter();
   const hoverEffect = {
     scale: 1.1, // Scale up on hover

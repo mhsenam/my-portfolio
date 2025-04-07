@@ -15,6 +15,9 @@ export default function NotFound() {
   useEffect(() => {
     const tl = gsap.timeline({ delay: 0.2 });
 
+    // Capture the current ref value inside the effect
+    const currentGhostRef = ghostRef.current;
+
     // Animate elements in
     tl.from(textRef.current, {
       opacity: 0,
@@ -43,22 +46,27 @@ export default function NotFound() {
         "-=0.3"
       );
 
-    // Add continuous floating animation to the ghost
-    gsap.to(ghostRef.current, {
-      y: "-=15",
-      duration: 1.5,
-      repeat: -1, // Infinite repeats
-      yoyo: true, // Go back and forth
-      ease: "sine.inOut",
-      delay: 1, // Start floating after entrance
-    });
+    // Add continuous floating animation using the captured value if non-null
+    if (currentGhostRef) {
+      gsap.to(currentGhostRef, {
+        y: "-=15",
+        duration: 1.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: 1,
+      });
+    }
 
     // Cleanup
     return () => {
       tl.kill();
-      gsap.killTweensOf(ghostRef.current); // Kill the floating animation
+      // Use the captured value in the cleanup function
+      if (currentGhostRef) {
+        gsap.killTweensOf(currentGhostRef);
+      }
     };
-  }, []);
+  }, []); // Dependency array remains empty as refs don't trigger re-runs
 
   return (
     <div
