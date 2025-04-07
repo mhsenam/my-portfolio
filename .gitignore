@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase configuration - DO NOT COMMIT
+/src/lib/firebaseConfig.ts
