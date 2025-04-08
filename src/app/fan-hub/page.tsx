@@ -21,7 +21,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { Search, PenSquare, SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
 
 // Helper function to create placeholder skeletons
 const PostSkeleton = () => (
@@ -295,17 +294,12 @@ export default function FanHubPage() {
                 </div>
               ) : (
                 filteredExplorePosts.map((post) => (
-                  <Link
-                    href={`/post/${post.id}`}
+                  <PostCard
                     key={`explore-${post.id}`}
-                    className="block mb-6 last:mb-0"
-                  >
-                    <PostCard
-                      post={post}
-                      onLikeUpdated={fetchPosts}
-                      onPostDeleted={handlePostDeleted}
-                    />
-                  </Link>
+                    post={post}
+                    onLikeUpdated={fetchPosts}
+                    onPostDeleted={handlePostDeleted}
+                  />
                 ))
               )}
             </div>
@@ -333,17 +327,12 @@ export default function FanHubPage() {
                 </div>
               ) : (
                 filteredMyPosts.map((post) => (
-                  <Link
-                    href={`/post/${post.id}`}
+                  <PostCard
                     key={`my-${post.id}`}
-                    className="block mb-6 last:mb-0"
-                  >
-                    <PostCard
-                      post={post}
-                      onLikeUpdated={fetchPosts}
-                      onPostDeleted={handlePostDeleted}
-                    />
-                  </Link>
+                    post={post}
+                    onLikeUpdated={fetchPosts}
+                    onPostDeleted={handlePostDeleted}
+                  />
                 ))
               )}
             </div>

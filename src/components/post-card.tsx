@@ -29,7 +29,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "./ui/button"; // For potential future actions
-import { ExternalLink, MessageSquare, ThumbsUp, Trash2 } from "lucide-react"; // Example icons
+import {
+  ExternalLink,
+  MessageSquare,
+  ThumbsUp,
+  Trash2,
+  ArrowUpRightSquare,
+} from "lucide-react"; // Example icons
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -54,6 +60,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"; // Import Dialog components for image modal
 import { gsap } from "gsap"; // Import GSAP
+import { useRouter, usePathname } from "next/navigation"; // Import useRouter and usePathname
 
 // Define the structure of a Post object
 export interface Post {
@@ -127,6 +134,8 @@ export function PostCard({
   onPostDeleted,
 }: PostCardProps) {
   const [user] = useAuthState(auth);
+  const pathname = usePathname();
+  const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
@@ -147,6 +156,9 @@ export function PostCard({
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   // --- Ref for Like Button/Icon Animation ---
   const likeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Determine if currently on a single post page
+  const isOnSinglePostPage = pathname?.startsWith("/post/");
 
   // --- Function to fetch replies (moved before useEffect) ---
   const fetchReplies = useCallback(async () => {
@@ -200,7 +212,9 @@ export function PostCard({
   }, [user, post.id]);
 
   // --- Updated handleLike with Optimistic UI & GSAP ---
-  const handleLike = async () => {
+  const handleLike = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    console.log("Like clicked, propagation stopped."); // Log
     if (!user || isLikeLoading) {
       if (!user) toast.error("You must be logged in to like posts.");
       return;
@@ -382,7 +396,11 @@ export function PostCard({
     }
   };
 
-  const toggleRepliesVisibility = () => {
+  const toggleRepliesVisibility = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.stopPropagation();
+    console.log("Toggle replies clicked, propagation stopped."); // Log
     const newState = !showReplies;
     setShowReplies(newState);
     if (newState && !hasFetchedReplies) {
@@ -463,6 +481,11 @@ export function PostCard({
       setIsDeleting(false);
       setShowDeleteReplyConfirm(false);
     }
+  };
+
+  // --- Navigation Handler ---
+  const handleOpenPost = () => {
+    router.push(`/post/${post.id}`);
   };
 
   return (
@@ -584,7 +607,7 @@ export function PostCard({
           )}
         </CardContent>
         <CardFooter className="flex flex-col items-start space-y-3 border-t pt-3 pb-3 bg-muted/50">
-          <div className="flex justify-start space-x-4 w-full">
+          <div className="flex justify-start items-center space-x-4 w-full">
             <Button
               ref={likeButtonRef}
               variant="ghost"
@@ -604,14 +627,32 @@ export function PostCard({
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-primary px-2"
-              onClick={handleReplyClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleReplyClick();
+              }}
             >
               <MessageSquare className="h-4 w-4 mr-1.5" /> Reply
             </Button>
+            {/* Conditionally render Open Post Button */}
+            {!isOnSinglePostPage && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-primary px-2"
+                onClick={handleOpenPost}
+              >
+                <ArrowUpRightSquare className="h-4 w-4 mr-1.5" /> Open
+              </Button>
+            )}
+            {/* Show/Hide Replies Button */}
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-primary px-2 ml-auto"
+              // Adjust margin based on whether Open button is present
+              className={`text-muted-foreground hover:text-primary px-2 ${
+                !isOnSinglePostPage ? "" : "ml-auto"
+              }`}
               onClick={toggleRepliesVisibility}
               disabled={repliesLoading}
             >
