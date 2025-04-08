@@ -108,15 +108,13 @@ async function getChannelDetails(
 }
 
 export default async function LatestVideos() {
-  const apiKey = "AIzaSyB5TVRYPZcmEJrgJCSE20Yzxt2_1-xC26w";
+  const apiKey = process.env.YOUTUBE_API_KEY;
   const channelId = "UCQ6TUhh6QVyvLsPxp2mPx_A"; // Your channel ID
 
-  const [videos, channelDetails] = await Promise.all([
-    getLatestVideos(apiKey, channelId),
-    getChannelDetails(apiKey, channelId),
-  ]);
-
   if (!apiKey) {
+    console.error(
+      "YouTube API key is not configured. Please set the YOUTUBE_API_KEY environment variable."
+    );
     return (
       <section
         id="latest-videos"
@@ -128,16 +126,39 @@ export default async function LatestVideos() {
             YouTube Videos
           </h2>
           <p className="text-sm text-muted-foreground">
-            YouTube API Key is not configured. Please set the YOUTUBE_API_KEY
-            environment variable.
+            YouTube API Key is not configured.
           </p>
         </div>
       </section>
     );
   }
 
-  if (!channelDetails) {
-    console.log("Could not fetch channel details.");
+  let videos: YouTubeVideoItem[] = [];
+  let channelDetails: YouTubeChannelItem | null = null;
+
+  try {
+    [videos, channelDetails] = await Promise.all([
+      getLatestVideos(apiKey, channelId),
+      getChannelDetails(apiKey, channelId),
+    ]);
+  } catch (error) {
+    console.error("Failed to fetch YouTube data:", error);
+    return (
+      <section
+        id="latest-videos"
+        className="py-16 md:py-24 bg-gradient-to-tr from-background via-muted/10 to-background"
+      >
+        <div className="container text-center">
+          <Youtube className="w-12 h-12 mx-auto mb-4 text-destructive" />
+          <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
+            Error Loading Videos
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Could not fetch data from YouTube.
+          </p>
+        </div>
+      </section>
+    );
   }
 
   const formatSubscribers = (count: string): string => {
