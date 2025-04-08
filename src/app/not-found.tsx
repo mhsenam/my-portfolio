@@ -49,13 +49,13 @@ export default function NotFound() {
     // Add continuous floating animation using the captured value if non-null
     if (currentGhostRef) {
       gsap.to(currentGhostRef, {
-        y: "-=15",
-        duration: 1.5,
+      y: "-=15",
+      duration: 1.5,
         repeat: -1,
         yoyo: true,
-        ease: "sine.inOut",
+      ease: "sine.inOut",
         delay: 1,
-      });
+    });
     }
 
     // Cleanup

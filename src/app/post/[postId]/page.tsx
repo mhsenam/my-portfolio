@@ -1,27 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { doc, getDoc, Timestamp } from "firebase/firestore"; // Keep Timestamp if used in Reply type
-import { db } from "@/lib/firebaseConfig"; // Adjust path if needed
-import { PostCard, Post } from "@/components/post-card"; // Reuse PostCard for display
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { PostCard, Post } from "@/components/post-card";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Define Reply type here if not directly imported or if PostCard doesn't export it
-// Ensure it matches the structure used elsewhere
-interface Reply {
-  id: string;
-  text: string;
-  authorId: string;
-  authorName: string;
-  authorAvatar?: string | null;
-  createdAt: Timestamp;
-  // Add other fields if Reply has them
-}
 
 export default function SinglePostPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const postId = params.postId as string;
   const replyIdToScroll = searchParams.get("replyId");
 
@@ -153,7 +142,8 @@ export default function SinglePostPage() {
         post={post}
         onLikeUpdated={() => {}}
         onPostDeleted={() => {
-          /* Maybe redirect? */ router.push("/fan-hub");
+          console.log("Post deleted, redirecting to /fan-hub");
+          router.push("/fan-hub");
         }}
       />
     );
