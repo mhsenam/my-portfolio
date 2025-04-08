@@ -44,7 +44,6 @@ next-env.d.ts
 # Firebase configuration - DO NOT COMMIT
 /src/lib/firebaseConfig.ts
 
-# Environment variables
-.env
-.env.*
-!.env.example
+# # Environment variables
+# .env
+# .env.*
