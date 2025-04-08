@@ -108,7 +108,7 @@ async function getChannelDetails(
 }
 
 export default async function LatestVideos() {
-  const apiKey = process.env.YOUTUBE_API_KEY;
+  const apiKey = "AIzaSyB5TVRYPZcmEJrgJCSE20Yzxt2_1-xC26w";
   const channelId = "UCQ6TUhh6QVyvLsPxp2mPx_A"; // Your channel ID
 
   const [videos, channelDetails] = await Promise.all([
