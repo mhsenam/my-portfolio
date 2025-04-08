@@ -19,6 +19,9 @@ import { PostCard, Post } from "@/components/post-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
+import { Search, PenSquare, SearchIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 // Helper function to create placeholder skeletons
 const PostSkeleton = () => (
@@ -48,6 +51,7 @@ export default function FanHubPage() {
   const [explorePosts, setExplorePosts] = useState<Post[]>([]);
   const [myPostsLoading, setMyPostsLoading] = useState(true);
   const [explorePostsLoading, setExplorePostsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetching Logic
   const fetchPosts = useCallback(async () => {
@@ -135,18 +139,37 @@ export default function FanHubPage() {
     );
   };
 
+  // --- Filter Logic ---
+  const filterPosts = (posts: Post[]): Post[] => {
+    if (!searchTerm) {
+      return posts; // No search term, return all posts
+    }
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return posts.filter(
+      (post) =>
+        post.title?.toLowerCase().includes(lowerCaseSearchTerm) ||
+        post.description?.toLowerCase().includes(lowerCaseSearchTerm) ||
+        post.authorName?.toLowerCase().includes(lowerCaseSearchTerm)
+    );
+  };
+
+  const filteredExplorePosts = filterPosts(explorePosts);
+  const filteredMyPosts = filterPosts(myPosts);
+
   // --- Render Logic ---
+
+  // First, handle the absolute loading state from useAuthState
   if (authLoading) {
-    // Show retro loader instead of text
+    // Consistent Loading state for Server and Initial Client Render
     return (
       <div className="flex flex-col justify-center items-center min-h-screen">
         <Image
-          src="/retro-loader.gif" // Assumes GIF is in /public/retro-loader.gif
+          src="/retro-loader.gif"
           alt="Loading..."
-          width={250} // Adjust size as needed
-          height={250} // Adjust size as needed
-          unoptimized={true} // Important for GIFs
-          priority // Load it fast
+          width={250}
+          height={250}
+          unoptimized={true}
+          priority
         />
         <p className="mt-4 text-lg text-muted-foreground font-semibold animate-pulse">
           Loading Hub...
@@ -155,6 +178,7 @@ export default function FanHubPage() {
     );
   }
 
+  // Auth is no longer loading, check for errors
   if (authError) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -163,24 +187,25 @@ export default function FanHubPage() {
     );
   }
 
-  // User is definitely logged in at this point due to redirect effect
+  // Auth is loaded, no error, but check if user is null (not logged in)
   if (!user) {
-    // Should ideally not be reached if redirect works, but acts as a safeguard
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        Redirecting to login...
-      </div>
-    );
+    // The useEffect hook handles the redirect, but we need to render something
+    // consistent (or null) while waiting for the redirect.
+    // Returning null is often safest for hydration.
+    // Alternatively, show a generic "Redirecting..." which matches server render if applicable.
+    return null; // Or return the Redirecting message if preferred and consistent
+    // return (
+    //   <div className="flex justify-center items-center min-h-screen">
+    //     Redirecting to login...
+    //   </div>
+    // );
   }
 
-  // Log state before rendering columns
-  console.log("Current 'My Posts' state:", myPosts);
-  console.log("Current 'Explore Posts' state:", explorePosts);
-  console.log("Loading states:", { myPostsLoading, explorePostsLoading });
-
+  // If we reach here: authLoading is false, authError is null, user exists.
+  // Render the main Fan Hub content.
   return (
     <motion.div
-      className="container mx-auto px-4 pt-24 pb-12 min-h-screen flex flex-col" // Removed gradient for focus
+      className="container mx-auto px-4 pt-24 pb-12 min-h-screen flex flex-col"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -189,7 +214,7 @@ export default function FanHubPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="flex-grow" // Allow content to grow
+        className="flex-grow"
       >
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
@@ -200,9 +225,6 @@ export default function FanHubPage() {
             </p>
           </div>
           <div className="mt-4 sm:mt-0">
-            {" "}
-            {/* Ensure button doesn't overlap on small screens */}
-            {/* Update the onPostCreated prop to call fetchPosts */}
             <CreatePostDialog onPostCreated={fetchPosts} />
           </div>
         </div>
@@ -210,21 +232,31 @@ export default function FanHubPage() {
         {/* --- Retro Banner --- */}
         <div className="relative w-full aspect-[4/1] mb-8 overflow-hidden rounded-lg shadow-lg">
           <Image
-            src="/fan-hub-banner.jpg" // Assumes the GIF is in /public/fan-hub-banner.gif
+            src="/fan-hub-banner.jpg"
             alt="Fan Hub Retro Banner"
-            layout="fill" // Fill the container
-            objectFit="cover" // Cover the container area
-            unoptimized={true} // Important for GIFs
-            priority // Load the banner early
+            layout="fill"
+            objectFit="cover"
+            unoptimized={true}
+            priority
           />
         </div>
-        {/* --- End Retro Banner --- */}
 
         <Separator className="mb-8 border-dashed border-muted-foreground/50" />
 
+        {/* --- Search Bar --- */}
+        <div className="mb-6 relative">
+          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search posts by title, description, or author..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 bg-input"
+          />
+        </div>
+
         {/* Tabs Layout - Updated Styling */}
         <Tabs defaultValue="explore" className="w-full">
-          {/* Remove default grid layout, add custom styling */}
           <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted/60 p-1 text-muted-foreground mb-6 w-full sm:w-auto gap-1 border border-border/50 shadow-inner">
             <TabsTrigger
               value="explore"
@@ -239,57 +271,79 @@ export default function FanHubPage() {
               👤 My Posts
             </TabsTrigger>
           </TabsList>
-
-          {/* Explore Tab Content */}
           <TabsContent value="explore">
             <div className="space-y-0">
-              {" "}
-              {/* Container for explore posts */}
               {explorePostsLoading ? (
                 <>
                   <PostSkeleton />
                   <PostSkeleton />
                   <PostSkeleton />
                 </>
-              ) : explorePosts.length === 0 ? (
-                <p className="text-center text-muted-foreground pt-4">
-                  No posts to explore yet.
-                </p>
+              ) : filteredExplorePosts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-16 px-4 border border-dashed rounded-lg bg-muted/30">
+                  <Search className="w-16 h-16 text-muted-foreground/70 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2 text-foreground/90">
+                    {searchTerm
+                      ? "No Matching Posts Found"
+                      : "The Hub is Quiet..."}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm
+                      ? `Try adjusting your search for "${searchTerm}".`
+                      : "Be the first to share something cool!"}
+                  </p>
+                </div>
               ) : (
-                explorePosts.map((post) => (
-                  <PostCard
+                filteredExplorePosts.map((post) => (
+                  <Link
+                    href={`/post/${post.id}`}
                     key={`explore-${post.id}`}
-                    post={post}
-                    onLikeUpdated={fetchPosts}
-                    onPostDeleted={handlePostDeleted}
-                  />
+                    className="block mb-6 last:mb-0"
+                  >
+                    <PostCard
+                      post={post}
+                      onLikeUpdated={fetchPosts}
+                      onPostDeleted={handlePostDeleted}
+                    />
+                  </Link>
                 ))
               )}
             </div>
           </TabsContent>
-
-          {/* My Posts Tab Content */}
           <TabsContent value="my-posts">
             <div className="space-y-0">
-              {" "}
-              {/* Container for my posts */}
               {myPostsLoading ? (
                 <>
                   <PostSkeleton />
                   <PostSkeleton />
                 </>
-              ) : myPosts.length === 0 ? (
-                <p className="text-center text-muted-foreground pt-4">
-                  You haven&apos;t created any posts yet.
-                </p>
+              ) : filteredMyPosts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-16 px-4 border border-dashed rounded-lg bg-muted/30">
+                  <PenSquare className="w-16 h-16 text-muted-foreground/70 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2 text-foreground/90">
+                    {searchTerm
+                      ? "No Matching Posts Found"
+                      : "Your Space Awaits!"}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm
+                      ? `Try adjusting your search for "${searchTerm}".`
+                      : 'Click "Create New Post" to share your first thought.'}
+                  </p>
+                </div>
               ) : (
-                myPosts.map((post) => (
-                  <PostCard
+                filteredMyPosts.map((post) => (
+                  <Link
+                    href={`/post/${post.id}`}
                     key={`my-${post.id}`}
-                    post={post}
-                    onLikeUpdated={fetchPosts}
-                    onPostDeleted={handlePostDeleted}
-                  />
+                    className="block mb-6 last:mb-0"
+                  >
+                    <PostCard
+                      post={post}
+                      onLikeUpdated={fetchPosts}
+                      onPostDeleted={handlePostDeleted}
+                    />
+                  </Link>
                 ))
               )}
             </div>

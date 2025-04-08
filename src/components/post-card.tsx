@@ -105,6 +105,22 @@ function formatTimestamp(timestamp: Timestamp): string {
   }
 }
 
+// --- Helper Function to Create Notification ---
+// TODO: Move notification creation to Cloud Functions for reliability
+const createNotification = async (userId: string, data: object) => {
+  try {
+    const notificationsRef = collection(db, "users", userId, "notifications");
+    await addDoc(notificationsRef, {
+      ...data,
+      createdAt: serverTimestamp(),
+      read: false,
+    });
+    console.log("Notification created for user:", userId);
+  } catch (error) {
+    console.error("Failed to create notification for user:", userId, error);
+  }
+};
+
 export function PostCard({
   post,
   onLikeUpdated,
@@ -245,7 +261,24 @@ export function PostCard({
           throw new Error("Like state mismatch");
         }
       });
-      // If transaction successful, call the update prop if provided
+
+      // --- Generate Notification on Successful Like (if liking, not unliking) ---
+      if (newIsLiked && user.uid !== post.authorId) {
+        // Check if liking and not self-liking
+        await createNotification(post.authorId, {
+          type: "like",
+          actorId: user.uid,
+          actorName: user.displayName || user.email || "Anonymous",
+          actorAvatar: user.photoURL || null,
+          postId: post.id,
+          postTitleSnippet:
+            post.title?.substring(0, 50) ||
+            post.description?.substring(0, 50) ||
+            "your post",
+        });
+      }
+      // --- End Notification Generation ---
+
       onLikeUpdated?.();
     } catch (error) {
       console.error("Like transaction failed: ", error);
@@ -278,7 +311,6 @@ export function PostCard({
 
     setIsSubmittingReply(true);
     const currentUserId = user.uid;
-    const repliesRef = collection(db, "posts", post.id, "replies");
 
     const replyData = {
       text: replyText.trim(),
@@ -294,12 +326,15 @@ export function PostCard({
     );
 
     try {
-      const newReplyRef = await addDoc(repliesRef, replyData);
+      const newReplyRef = await addDoc(
+        collection(db, "posts", post.id, "replies"),
+        replyData
+      );
       toast.success("Reply posted!");
 
-      // Optimistic UI update or refetch
+      // Optimistic UI update for reply list
       const newReply: Reply = {
-        id: newReplyRef.id,
+        id: newReplyRef.id, // Get the ID of the new reply
         ...(replyData as Omit<Reply, "id" | "createdAt">),
         createdAt: Timestamp.now(),
       };
@@ -308,6 +343,24 @@ export function PostCard({
         setShowReplies(true);
         if (!hasFetchedReplies) setHasFetchedReplies(true);
       }
+
+      // Generate Notification on Successful Reply
+      if (user.uid !== post.authorId) {
+        await createNotification(post.authorId, {
+          type: "reply",
+          actorId: user.uid,
+          actorName: user.displayName || user.email || "Anonymous",
+          actorAvatar: user.photoURL || null,
+          postId: post.id,
+          postTitleSnippet:
+            post.title?.substring(0, 50) ||
+            post.description?.substring(0, 50) ||
+            "your post",
+          replyTextSnippet: replyData.text.substring(0, 75),
+          replyId: newReplyRef.id, // Add the ID of the reply document
+        });
+      }
+      // ... rest of try ...
 
       setReplyText("");
       setShowReplyInput(false);
@@ -621,6 +674,7 @@ export function PostCard({
                   {replies.map((reply) => (
                     <div
                       key={reply.id}
+                      id={`reply-${reply.id}`} // Add unique ID for scrolling
                       className="flex items-start space-x-3 text-sm group relative"
                     >
                       <HoverCard openDelay={200}>

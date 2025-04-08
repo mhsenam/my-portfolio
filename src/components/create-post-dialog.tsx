@@ -141,7 +141,19 @@ export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Create New Post</Button>
+        <Button
+          size="lg"
+          className="
+            px-6 py-3 text-base font-semibold text-white rounded-lg shadow-lg 
+            bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 
+            hover:scale-105 hover:shadow-xl hover:brightness-110 
+            active:scale-100 active:brightness-100 
+            transition-all duration-300 ease-in-out
+            animate-pulse-slow
+          "
+        >
+          ✨ Create New Post ✨
+        </Button>
       </DialogTrigger>
       <DialogOverlay className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm" />
       <DialogContent className="sm:max-w-[425px] md:max-w-[600px] bg-card z-[70]">
