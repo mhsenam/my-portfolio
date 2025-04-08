@@ -137,9 +137,20 @@ export default function FanHubPage() {
 
   // --- Render Logic ---
   if (authLoading) {
+    // Show retro loader instead of text
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        Loading Authentication...
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <Image
+          src="/retro-loader.gif" // Assumes GIF is in /public/retro-loader.gif
+          alt="Loading..."
+          width={250} // Adjust size as needed
+          height={250} // Adjust size as needed
+          unoptimized={true} // Important for GIFs
+          priority // Load it fast
+        />
+        <p className="mt-4 text-lg text-muted-foreground font-semibold animate-pulse">
+          Loading Hub...
+        </p>
       </div>
     );
   }

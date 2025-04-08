@@ -16,7 +16,7 @@ import {
   orderBy,
   deleteDoc,
 } from "firebase/firestore";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../lib/firebaseConfig";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,6 +53,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog"; // Import Dialog components for image modal
+import { gsap } from "gsap"; // Import GSAP
 
 // Define the structure of a Post object
 export interface Post {
@@ -128,6 +129,8 @@ export function PostCard({
   const [isDeleting, setIsDeleting] = useState(false); // General deleting state
   // --- State for Image Modal ---
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  // --- Ref for Like Button/Icon Animation ---
+  const likeButtonRef = useRef<HTMLButtonElement>(null);
 
   // --- Function to fetch replies (moved before useEffect) ---
   const fetchReplies = useCallback(async () => {
@@ -180,47 +183,79 @@ export function PostCard({
     }
   }, [user, post.id]);
 
+  // --- Updated handleLike with Optimistic UI & GSAP ---
   const handleLike = async () => {
-    if (!user) {
-      toast.error("You must be logged in to like posts.");
+    if (!user || isLikeLoading) {
+      if (!user) toast.error("You must be logged in to like posts.");
       return;
     }
-    setIsLikeLoading(true);
 
+    // Store previous state for potential rollback
+    const previousIsLiked = isLiked;
+    const previousLikeCount = likeCount;
+
+    // Optimistic UI update
+    const newIsLiked = !previousIsLiked;
+    const newLikeCount = previousIsLiked
+      ? previousLikeCount - 1
+      : previousLikeCount + 1;
+    setIsLiked(newIsLiked);
+    setLikeCount(newLikeCount < 0 ? 0 : newLikeCount);
+    setIsLikeLoading(true); // Visually disable button during transaction
+
+    // GSAP Animation (runs concurrently with backend update)
+    if (likeButtonRef.current) {
+      gsap
+        .timeline()
+        .to(likeButtonRef.current, {
+          scale: 1.2,
+          duration: 0.15,
+          ease: "power1.inOut",
+        })
+        .to(likeButtonRef.current, {
+          scale: 1,
+          duration: 0.3,
+          ease: "elastic.out(1, 0.5)",
+        });
+    }
+
+    // Backend update
     const postRef = doc(db, "posts", post.id);
     const likeRef = doc(postRef, "likes", user.uid);
 
     try {
       await runTransaction(db, async (transaction) => {
         const likeDoc = await transaction.get(likeRef);
-        const postDoc = await transaction.get(postRef);
+        // We don't need to get the postDoc just for the count anymore
 
-        if (!postDoc.exists()) {
-          throw "Post does not exist anymore.";
-        }
-
-        const currentLikes = postDoc.data().likes || 0;
-
-        if (likeDoc.exists()) {
+        if (likeDoc.exists() && previousIsLiked) {
+          // Intended to Unlike, and it was liked before optimistic update
           transaction.delete(likeRef);
           transaction.update(postRef, { likes: increment(-1) });
-          setIsLiked(false);
-          setLikeCount(currentLikes - 1 < 0 ? 0 : currentLikes - 1);
-        } else {
+        } else if (!likeDoc.exists() && !previousIsLiked) {
+          // Intended to Like, and it was not liked before optimistic update
           transaction.set(likeRef, {
             userId: user.uid,
             likedAt: Timestamp.now(),
           });
           transaction.update(postRef, { likes: increment(1) });
-          setIsLiked(true);
-          setLikeCount(currentLikes + 1);
+        } else {
+          // State mismatch (e.g., double click before UI update) - transaction will rollback implicitly
+          console.warn("Like state mismatch during transaction. Rolling back.");
+          throw new Error("Like state mismatch");
         }
-        onLikeUpdated?.();
       });
+      // If transaction successful, call the update prop if provided
+      onLikeUpdated?.();
     } catch (error) {
       console.error("Like transaction failed: ", error);
       toast.error("Failed to update like status.");
+
+      // Rollback optimistic UI update on error
+      setIsLiked(previousIsLiked);
+      setLikeCount(previousLikeCount);
     } finally {
+      // Re-enable button after transaction attempt
       setIsLikeLoading(false);
     }
   };
@@ -265,14 +300,12 @@ export function PostCard({
       // Optimistic UI update or refetch
       const newReply: Reply = {
         id: newReplyRef.id,
-        ...(replyData as Omit<Reply, "id" | "createdAt">), // Cast carefully
-        createdAt: Timestamp.now(), // Use client timestamp for immediate feedback
+        ...(replyData as Omit<Reply, "id" | "createdAt">),
+        createdAt: Timestamp.now(),
       };
       setReplies((prevReplies) => [...prevReplies, newReply]);
       if (!showReplies) {
-        // If replies were hidden, show them now
         setShowReplies(true);
-        // Since we added a reply, mark as fetched if it wasn't already
         if (!hasFetchedReplies) setHasFetchedReplies(true);
       }
 
@@ -281,30 +314,16 @@ export function PostCard({
     } catch (error: unknown) {
       console.error("Error posting reply raw:", error);
 
-      let errorCode: string | undefined = undefined;
       let errorMessage: string | undefined = undefined;
 
       if (error instanceof Error) {
         errorMessage = error.message;
-        // Attempt to access Firebase specific 'code' property safely
-        if (typeof error === "object" && error !== null && "code" in error) {
-          // We know 'code' exists, but TS might not, so cast carefully if needed or access via index
-          try {
-            errorCode = (error as { code: string }).code;
-          } catch {
-            /* ignore casting error */
-          }
-        }
       } else {
         errorMessage = "An unknown error occurred while posting reply.";
       }
 
-      console.error(
-        `Firebase Error Code: ${errorCode || "N/A"}, Message: ${
-          errorMessage || "N/A"
-        }`
-      );
-      toast.error("Failed to post reply.");
+      console.error(`Error posting reply: ${errorMessage}`);
+      toast.error("Failed to post reply.", { description: errorMessage });
     } finally {
       setIsSubmittingReply(false);
     }
@@ -313,13 +332,8 @@ export function PostCard({
   const toggleRepliesVisibility = () => {
     const newState = !showReplies;
     setShowReplies(newState);
-    // Fetch only when opening and if not fetched before
     if (newState && !hasFetchedReplies) {
       fetchReplies();
-    } else if (!newState) {
-      // Optional: Clear replies when hiding
-      // setReplies([]);
-      // setHasFetchedReplies(false);
     }
   };
 
@@ -519,6 +533,7 @@ export function PostCard({
         <CardFooter className="flex flex-col items-start space-y-3 border-t pt-3 pb-3 bg-muted/50">
           <div className="flex justify-start space-x-4 w-full">
             <Button
+              ref={likeButtonRef}
               variant="ghost"
               size="sm"
               className={`text-muted-foreground hover:text-primary px-2 ${
@@ -647,7 +662,7 @@ export function PostCard({
                           <span className="font-medium text-xs">
                             {reply.authorName || "Anonymous"}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground pr-2">
                             {formatTimestamp(reply.createdAt)}
                           </span>
                         </div>
@@ -710,7 +725,7 @@ export function PostCard({
         open={showDeleteReplyConfirm}
         onOpenChange={setShowDeleteReplyConfirm}
       >
-        <AlertDialogContent className="bg-background">
+        <AlertDialogContent className="bg-white dark:bg-zinc-950">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this reply?</AlertDialogTitle>
             <AlertDialogDescription>
