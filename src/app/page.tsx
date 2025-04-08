@@ -8,6 +8,7 @@ import { ContactPopover } from "@/components/contact-popover"; // Import the pop
 import { AnimatedCard } from "@/components/animated-card"; // Import AnimatedCard
 import { AnimatedHero } from "@/components/animated-hero"; // Import AnimatedHero
 import { ArticleCard } from "@/components/article-card"; // Import ArticleCard
+import LatestVideos from "@/components/latest-videos"; // Import the component
 
 // Static data for example articles (same as in articles/page.tsx)
 const staticArticles = [
@@ -164,6 +165,9 @@ export default async function Home() {
             </Link>
           </div>
         </section>
+
+        {/* Add Latest Videos Section */}
+        <LatestVideos />
 
         {/* About Section */}
         <section className="text-center space-y-6 max-w-3xl mx-auto">
