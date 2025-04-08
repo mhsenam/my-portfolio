@@ -607,7 +607,7 @@ export function PostCard({
           )}
         </CardContent>
         <CardFooter className="flex flex-col items-start space-y-3 border-t pt-3 pb-3 bg-muted/50">
-          <div className="flex justify-start items-center space-x-4 w-full">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-4 w-full">
             <Button
               ref={likeButtonRef}
               variant="ghost"
@@ -631,34 +631,39 @@ export function PostCard({
                 e.stopPropagation();
                 handleReplyClick();
               }}
+              title="Reply"
             >
-              <MessageSquare className="h-4 w-4 mr-1.5" /> Reply
+              <MessageSquare className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Reply</span>
             </Button>
-            {/* Conditionally render Open Post Button */}
             {!isOnSinglePostPage && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-primary px-2"
                 onClick={handleOpenPost}
+                title="Open Post"
               >
-                <ArrowUpRightSquare className="h-4 w-4 mr-1.5" /> Open
+                <ArrowUpRightSquare className="h-4 w-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Open</span>
               </Button>
             )}
-            {/* Show/Hide Replies Button */}
             <Button
               variant="ghost"
               size="sm"
-              // Adjust margin based on whether Open button is present
-              className={`text-muted-foreground hover:text-primary px-2 ${
-                !isOnSinglePostPage ? "" : "ml-auto"
-              }`}
+              className={`text-muted-foreground hover:text-primary px-2 ml-auto`}
               onClick={toggleRepliesVisibility}
               disabled={repliesLoading}
+              title={showReplies ? "Hide Replies" : "Show Replies"}
             >
-              {showReplies
-                ? `Hide Replies (${replies.length})`
-                : "Show Replies"}
+              <span className="hidden sm:inline">
+                {showReplies
+                  ? `Hide Replies (${replies.length})`
+                  : "Show Replies"}
+              </span>
+              <span className="sm:hidden">
+                {showReplies ? `Hide (${replies.length})` : "Replies"}
+              </span>
             </Button>
           </div>
           {showReplyInput && (
@@ -715,7 +720,7 @@ export function PostCard({
                   {replies.map((reply) => (
                     <div
                       key={reply.id}
-                      id={`reply-${reply.id}`} // Add unique ID for scrolling
+                      id={`reply-${reply.id}`}
                       className="flex items-start space-x-3 text-sm group relative"
                     >
                       <HoverCard openDelay={200}>
@@ -763,7 +768,6 @@ export function PostCard({
                         </div>
                         <p className="mt-1 whitespace-pre-wrap">{reply.text}</p>
                       </div>
-                      {/* Reply Delete Button (reply author or post author) */}
                       {user &&
                         (user.uid === reply.authorId ||
                           user.uid === post.authorId) && (
