@@ -10,8 +10,7 @@ import {
   reauthenticateWithCredential,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../../lib/firebaseConfig"; // Use relative path
+import { auth, db } from "../../lib/firebaseConfig"; // Use relative path
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,46 +96,72 @@ export default function ProfilePage() {
     let newPhotoURL = user.photoURL; // Keep existing photoURL initially
 
     try {
-      // 1. Upload Avatar if changed
+      // 1. Upload Avatar to API route if changed
       if (avatarFile) {
         setIsUploading(true);
-        const avatarRef = ref(
-          storage,
-          `avatars/${user.uid}/${avatarFile.name}`
-        );
-        const snapshot = await uploadBytes(avatarRef, avatarFile);
-        newPhotoURL = await getDownloadURL(snapshot.ref);
-        setIsUploading(false);
+        console.log("Uploading avatar via API route...");
+
+        const formData = new FormData();
+        formData.append("file", avatarFile);
+
+        const response = await fetch("/api/upload-avatar", {
+          method: "POST",
+          body: formData,
+          // Optional: Add authorization header if API route requires it
+          // headers: { 'Authorization': `Bearer ${await user.getIdToken()}` },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || `API Error: ${response.statusText}`
+          );
+        }
+
+        const result = await response.json();
+        newPhotoURL = result.secureUrl;
+
+        if (!newPhotoURL) {
+          throw new Error("API did not return a secure URL.");
+        }
+        console.log("Cloudinary URL obtained:", newPhotoURL);
       }
 
+      // --- Continue with profile updates --- //
+
       // 2. Update Firebase Auth Profile
+      console.log("Updating Firebase Auth profile...");
       await updateProfile(user, {
         displayName: displayName,
-        photoURL: newPhotoURL, // Use the potentially new URL
+        photoURL: newPhotoURL, // Use Cloudinary URL or existing URL
       });
+      console.log("Firebase Auth profile updated.");
 
-      // 3. Update Firestore User Document (including username)
+      // 3. Update Firestore User Document
+      console.log("Updating Firestore document...");
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         displayName: displayName,
         username: username,
         photoURL: newPhotoURL,
       });
+      console.log("Firestore document updated.");
 
       // Update local preview state if upload happened
       if (avatarFile) {
         setAvatarPreview(newPhotoURL);
-        setAvatarFile(null); // Clear the file input state after successful upload
+        setAvatarFile(null); // Clear the file input state
       }
 
       toast.success("Profile Updated Successfully!");
     } catch (error: unknown) {
-      console.error("Profile update error:", error);
-      const errorMessage =
+      console.error("Profile update process error:", error);
+      const errorDescription =
         error instanceof Error ? error.message : "An unknown error occurred.";
-      toast.error("Update Failed", { description: errorMessage });
-      setIsUploading(false);
+      toast.error("Profile Update Failed", { description: errorDescription });
     } finally {
+      console.log("Profile update finally block reached.");
+      setIsUploading(false);
       setIsUpdatingProfile(false);
     }
   };

@@ -14,8 +14,9 @@ import {
   query,
   getDocs,
   orderBy,
+  deleteDoc,
 } from "firebase/firestore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../lib/firebaseConfig";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,9 +29,30 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "./ui/button"; // For potential future actions
-import { ExternalLink, MessageSquare, ThumbsUp } from "lucide-react"; // Example icons
+import { ExternalLink, MessageSquare, ThumbsUp, Trash2 } from "lucide-react"; // Example icons
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"; // Import HoverCard components
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"; // Import AlertDialog components
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog"; // Import Dialog components for image modal
 
 // Define the structure of a Post object
 export interface Post {
@@ -60,6 +82,7 @@ interface Reply {
 interface PostCardProps {
   post: Post;
   onLikeUpdated?: () => void; // Add callback prop
+  onPostDeleted?: (postId: string) => void; // Add callback prop for post deletion
 }
 
 // Helper function to format Firestore Timestamps
@@ -81,7 +104,11 @@ function formatTimestamp(timestamp: Timestamp): string {
   }
 }
 
-export function PostCard({ post, onLikeUpdated }: PostCardProps) {
+export function PostCard({
+  post,
+  onLikeUpdated,
+  onPostDeleted,
+}: PostCardProps) {
   const [user] = useAuthState(auth);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
@@ -94,6 +121,53 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
   const [repliesLoading, setRepliesLoading] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [hasFetchedReplies, setHasFetchedReplies] = useState(false); // Track if fetch has been attempted
+  // --- State for Delete Confirmations ---
+  const [showDeletePostConfirm, setShowDeletePostConfirm] = useState(false);
+  const [showDeleteReplyConfirm, setShowDeleteReplyConfirm] = useState(false);
+  const [replyToDeleteId, setReplyToDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false); // General deleting state
+  // --- State for Image Modal ---
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+  // --- Function to fetch replies (moved before useEffect) ---
+  const fetchReplies = useCallback(async () => {
+    if (hasFetchedReplies) return; // Don't fetch if already fetched
+
+    console.log(`Fetching replies for post ${post.id}`); // Debug log
+    setRepliesLoading(true);
+    setHasFetchedReplies(true); // Mark as attempted fetch
+    const repliesRef = collection(db, "posts", post.id, "replies");
+    const q = query(repliesRef, orderBy("createdAt", "asc"));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      const fetchedReplies = querySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...(doc.data() as Omit<Reply, "id">),
+          } as Reply)
+      );
+      setReplies(fetchedReplies);
+      console.log(
+        `Fetched ${fetchedReplies.length} replies for post ${post.id}`
+      ); // Debug log
+    } catch (error) {
+      console.error(`Error fetching replies for post ${post.id}:`, error); // Debug log
+      toast.error("Failed to load replies.");
+      setShowReplies(false);
+      setHasFetchedReplies(false);
+    } finally {
+      setRepliesLoading(false);
+    }
+  }, [post.id, hasFetchedReplies]);
+
+  // --- Effect to fetch replies when shown ---
+  useEffect(() => {
+    if (showReplies && !hasFetchedReplies) {
+      fetchReplies();
+    }
+  }, [showReplies, hasFetchedReplies, fetchReplies]);
 
   useEffect(() => {
     if (user) {
@@ -185,8 +259,23 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
     );
 
     try {
-      await addDoc(repliesRef, replyData);
+      const newReplyRef = await addDoc(repliesRef, replyData);
       toast.success("Reply posted!");
+
+      // Optimistic UI update or refetch
+      const newReply: Reply = {
+        id: newReplyRef.id,
+        ...(replyData as Omit<Reply, "id" | "createdAt">), // Cast carefully
+        createdAt: Timestamp.now(), // Use client timestamp for immediate feedback
+      };
+      setReplies((prevReplies) => [...prevReplies, newReply]);
+      if (!showReplies) {
+        // If replies were hidden, show them now
+        setShowReplies(true);
+        // Since we added a reply, mark as fetched if it wasn't already
+        if (!hasFetchedReplies) setHasFetchedReplies(true);
+      }
+
       setReplyText("");
       setShowReplyInput(false);
     } catch (error: unknown) {
@@ -221,36 +310,6 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
     }
   };
 
-  // --- Function to fetch replies ---
-  const fetchReplies = async () => {
-    if (!showReplies || hasFetchedReplies) return; // Don't fetch if already fetched or not showing
-
-    setRepliesLoading(true);
-    setHasFetchedReplies(true); // Mark as attempted fetch
-    const repliesRef = collection(db, "posts", post.id, "replies");
-    const q = query(repliesRef, orderBy("createdAt", "asc")); // Order replies oldest first
-
-    try {
-      const querySnapshot = await getDocs(q);
-      const fetchedReplies = querySnapshot.docs.map(
-        (doc) =>
-          ({
-            id: doc.id,
-            ...(doc.data() as Omit<Reply, "id">),
-          } as Reply)
-      );
-      setReplies(fetchedReplies);
-    } catch (error) {
-      console.error("Error fetching replies:", error);
-      toast.error("Failed to load replies.");
-      setShowReplies(false); // Hide replies section on error
-      setHasFetchedReplies(false); // Allow refetch attempt
-    } finally {
-      setRepliesLoading(false);
-    }
-  };
-
-  // --- Function to toggle reply visibility and fetch ---
   const toggleRepliesVisibility = () => {
     const newState = !showReplies;
     setShowReplies(newState);
@@ -264,181 +323,413 @@ export function PostCard({ post, onLikeUpdated }: PostCardProps) {
     }
   };
 
+  // --- Delete Handlers ---
+  const handleDeletePostClick = () => {
+    setShowDeletePostConfirm(true);
+  };
+
+  const handleConfirmDeletePost = async () => {
+    if (!user || user.uid !== post.authorId) {
+      toast.error("You are not authorized to delete this post.");
+      setShowDeletePostConfirm(false);
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      // TODO: Ideally, use a Cloud Function to delete subcollections (likes, replies)
+      // Client-side deletion of subcollections is possible but less reliable.
+      // For now, just delete the post document.
+      const postRef = doc(db, "posts", post.id);
+      await deleteDoc(postRef);
+      toast.success("Post deleted successfully.");
+      onPostDeleted?.(post.id); // Notify parent to update UI
+      // No need to close dialog here, state change handles it
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast.error("Failed to delete post.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeletePostConfirm(false);
+    }
+  };
+
+  const handleDeleteReplyClick = (replyId: string) => {
+    setReplyToDeleteId(replyId);
+    setShowDeleteReplyConfirm(true);
+  };
+
+  const handleConfirmDeleteReply = async () => {
+    if (!user || !replyToDeleteId) {
+      setShowDeleteReplyConfirm(false);
+      return;
+    }
+
+    const replyToDelete = replies.find((r) => r.id === replyToDeleteId);
+    if (!replyToDelete) {
+      setShowDeleteReplyConfirm(false);
+      return; // Reply not found
+    }
+
+    // Check authorization (reply author or post author)
+    if (user.uid !== replyToDelete.authorId && user.uid !== post.authorId) {
+      toast.error("You are not authorized to delete this reply.");
+      setShowDeleteReplyConfirm(false);
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const replyRef = doc(db, "posts", post.id, "replies", replyToDeleteId);
+      await deleteDoc(replyRef);
+
+      // Optimistic UI update
+      setReplies((prevReplies) =>
+        prevReplies.filter((reply) => reply.id !== replyToDeleteId)
+      );
+
+      toast.success("Reply deleted successfully.");
+      setReplyToDeleteId(null);
+    } catch (error) {
+      console.error("Error deleting reply:", error);
+      toast.error("Failed to delete reply.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteReplyConfirm(false);
+    }
+  };
+
   return (
-    <Card className="overflow-hidden break-inside-avoid mb-6">
-      {" "}
-      {/* Added margin-bottom */}
-      <CardHeader className="flex flex-row items-start space-x-4 pb-2">
-        <Avatar className="h-10 w-10 border">
-          <AvatarImage
-            src={post.authorAvatar || undefined}
-            alt={`${post.authorName || "User"}'s avatar`}
-          />
-          <AvatarFallback>
-            {post.authorName?.charAt(0).toUpperCase() || "U"}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <p className="text-sm font-semibold leading-none">
-            {post.authorName || "Anonymous"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {formatTimestamp(post.createdAt)}
-          </p>
-        </div>
-        {/* Optional: Add dropdown menu for edit/delete here */}
-      </CardHeader>
-      <CardContent className="pt-0 pb-4">
-        {" "}
-        {/* Adjusted padding */}
-        {post.imageUrl && (
-          <div className="relative w-full aspect-video rounded-md overflow-hidden my-3 border">
-            <Image
-              src={post.imageUrl}
-              alt={post.title || "Post image"}
-              layout="fill"
-              objectFit="cover"
-            />
+    <>
+      <Card className="overflow-hidden break-inside-avoid mb-6">
+        <CardHeader className="flex flex-row items-start space-x-4 pb-2 relative">
+          <HoverCard openDelay={200}>
+            <HoverCardTrigger asChild>
+              <Avatar className="h-10 w-10 border cursor-pointer">
+                <AvatarImage
+                  src={post.authorAvatar || undefined}
+                  alt={`${post.authorName || "User"}'s avatar`}
+                />
+                <AvatarFallback>
+                  {post.authorName?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto p-4">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage
+                    src={post.authorAvatar || undefined}
+                    alt={`${post.authorName || "User"}'s avatar`}
+                  />
+                  <AvatarFallback>
+                    {post.authorName?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-lg font-semibold">
+                    {post.authorName || "Anonymous"}
+                  </p>
+                  {/* Placeholder for username - Update if username field is added to Post interface */}
+                  {/* <p className="text-sm text-muted-foreground">
+                    @username_placeholder
+                  </p> */}
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+          <div className="flex-1">
+            <p className="text-sm font-semibold leading-none">
+              {post.authorName || "Anonymous"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {formatTimestamp(post.createdAt)}
+            </p>
           </div>
-        )}
-        {post.title && (
-          <CardTitle className="text-lg mb-2 font-semibold">
-            {post.title}
-          </CardTitle>
-        )}
-        {post.description && (
-          <p className="text-sm text-foreground whitespace-pre-wrap mb-3">
-            {post.description}
-          </p>
-        )}
-        {post.link && (
-          <a
-            href={post.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-500 hover:underline inline-flex items-center group break-all"
-          >
-            <ExternalLink className="h-4 w-4 mr-1 flex-shrink-0 group-hover:text-blue-700" />
-            {/* Try to display a shorter version of the link */}
-            <span className="truncate">{post.link}</span>
-          </a>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col items-start space-y-3 border-t pt-3 pb-3 bg-muted/50">
-        <div className="flex justify-start space-x-4 w-full">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`text-muted-foreground hover:text-primary px-2 ${
-              isLiked ? "text-blue-600 hover:text-blue-700" : ""
-            }`}
-            onClick={handleLike}
-            disabled={isLikeLoading || !user}
-          >
-            <ThumbsUp
-              className={`h-4 w-4 mr-1.5 ${isLiked ? "fill-current" : ""}`}
-            />{" "}
-            {likeCount}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-primary px-2"
-            onClick={handleReplyClick}
-          >
-            <MessageSquare className="h-4 w-4 mr-1.5" /> Reply
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-primary px-2 ml-auto"
-            onClick={toggleRepliesVisibility}
-            disabled={repliesLoading}
-          >
-            {showReplies ? "Hide Replies" : "Show Replies"}
-          </Button>
-        </div>
-        {showReplyInput && (
-          <form
-            onSubmit={handleReplySubmit}
-            className="w-full pt-2 pl-1 pr-1 space-y-2"
-          >
-            <Textarea
-              placeholder={`Replying as ${
-                user?.displayName || user?.email || "user"
-              }...`}
-              rows={3}
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              disabled={isSubmittingReply}
-              className="text-sm"
-            />
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowReplyInput(false)}
-                disabled={isSubmittingReply}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSubmittingReply || !replyText.trim()}
-              >
-                {isSubmittingReply ? "Posting..." : "Post Reply"}
-              </Button>
-            </div>
-          </form>
-        )}
-        {showReplies && (
-          <div className="w-full pt-3 border-t border-border/50">
-            {repliesLoading ? (
-              <div className="flex items-center justify-center p-4">
-                <p className="text-sm text-muted-foreground">
-                  Loading replies...
+          {/* Post Delete Button (only for author) */}
+          {user && user.uid === post.authorId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-1 right-1 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={handleDeletePostClick}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete Post</span>
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="pt-0 pb-4">
+          {/* Reordered Content */}
+          {/* 1. Link Button */}
+          {post.link && (
+            <a
+              href={post.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-500 hover:underline inline-flex items-center group break-all mb-3"
+            >
+              <ExternalLink className="h-4 w-4 mr-1 flex-shrink-0 group-hover:text-blue-700" />
+              <span className="truncate">{post.link}</span>
+            </a>
+          )}
+          {/* 2. Title */}
+          {post.title && (
+            <CardTitle className="text-lg mb-2 font-semibold">
+              {post.title}
+            </CardTitle>
+          )}
+          {/* 3. Description */}
+          {post.description && (
+            <p className="text-sm text-foreground whitespace-pre-wrap mb-3">
+              {post.description}
+            </p>
+          )}
+          {/* 4. Image */}
+          {post.imageUrl && (
+            <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+              <DialogTrigger asChild>
+                <div className="relative w-full aspect-video rounded-md overflow-hidden my-3 border cursor-pointer group">
+                  <Image
+                    src={post.imageUrl}
+                    alt={post.title || "Post image"}
+                    layout="fill"
+                    objectFit="contain"
+                    className="bg-black/10 group-hover:opacity-90 transition-opacity"
+                  />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl p-2 sm:p-4 bg-background border-none shadow-xl">
+                <DialogTitle className="sr-only">
+                  {post.title || "Post Image"}
+                </DialogTitle>
+                <div className="relative w-full h-auto max-h-[85vh] flex justify-center items-center">
+                  <Image
+                    src={post.imageUrl}
+                    alt={post.title || "Post image"}
+                    width={1200}
+                    height={900}
+                    className="max-w-full max-h-full h-auto w-auto object-contain"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </CardContent>
+        <CardFooter className="flex flex-col items-start space-y-3 border-t pt-3 pb-3 bg-muted/50">
+          <div className="flex justify-start space-x-4 w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`text-muted-foreground hover:text-primary px-2 ${
+                isLiked ? "text-blue-600 hover:text-blue-700" : ""
+              }`}
+              onClick={handleLike}
+              disabled={isLikeLoading || !user}
+            >
+              <ThumbsUp
+                className={`h-4 w-4 mr-1.5 ${isLiked ? "fill-current" : ""}`}
+              />{" "}
+              {likeCount}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-primary px-2"
+              onClick={handleReplyClick}
+            >
+              <MessageSquare className="h-4 w-4 mr-1.5" /> Reply
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-primary px-2 ml-auto"
+              onClick={toggleRepliesVisibility}
+              disabled={repliesLoading}
+            >
+              {showReplies
+                ? `Hide Replies (${replies.length})`
+                : "Show Replies"}
+            </Button>
+          </div>
+          {showReplyInput && (
+            <form
+              onSubmit={handleReplySubmit}
+              className="w-full pt-2 pl-1 pr-1 space-y-2"
+            >
+              <Textarea
+                placeholder={`Replying as ${
+                  user?.displayName || user?.email || "user"
+                }...`}
+                rows={3}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                disabled={isSubmittingReply || isDeleting}
+                className="text-sm"
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowReplyInput(false)}
+                  disabled={isSubmittingReply || isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    isSubmittingReply || !replyText.trim() || isDeleting
+                  }
+                >
+                  {isSubmittingReply ? "Posting..." : "Post Reply"}
+                </Button>
+              </div>
+            </form>
+          )}
+          {showReplies && (
+            <div className="w-full pt-3 mt-3 border-t border-border/50">
+              {repliesLoading ? (
+                <div className="flex items-center justify-center p-4">
+                  <p className="text-sm text-muted-foreground">
+                    Loading replies...
+                  </p>
+                </div>
+              ) : replies.length === 0 ? (
+                <p className="text-sm text-muted-foreground px-1">
+                  No replies yet.
                 </p>
-              </div>
-            ) : replies.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-1">
-                No replies yet.
-              </p>
-            ) : (
-              <div className="space-y-3 pl-1 pr-1 max-h-60 overflow-y-auto">
-                {replies.map((reply) => (
-                  <div
-                    key={reply.id}
-                    className="flex items-start space-x-3 text-sm"
-                  >
-                    <Avatar className="h-6 w-6 border mt-0.5">
-                      <AvatarImage
-                        src={reply.authorAvatar || undefined}
-                        alt={`${reply.authorName || "User"}'s avatar`}
-                      />
-                      <AvatarFallback>
-                        {reply.authorName?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 bg-background/50 p-2 rounded-md">
-                      <div className="flex items-baseline justify-between">
-                        <span className="font-medium text-xs">
-                          {reply.authorName || "Anonymous"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatTimestamp(reply.createdAt)}
-                        </span>
+              ) : (
+                <div className="space-y-3 pl-1 pr-1 max-h-60 overflow-y-auto">
+                  {replies.map((reply) => (
+                    <div
+                      key={reply.id}
+                      className="flex items-start space-x-3 text-sm group relative"
+                    >
+                      <HoverCard openDelay={200}>
+                        <HoverCardTrigger asChild>
+                          <Avatar className="h-6 w-6 border mt-0.5 cursor-pointer">
+                            <AvatarImage
+                              src={reply.authorAvatar || undefined}
+                              alt={`${reply.authorName || "User"}'s avatar`}
+                            />
+                            <AvatarFallback>
+                              {reply.authorName?.charAt(0).toUpperCase() || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-auto p-3">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage
+                                src={reply.authorAvatar || undefined}
+                                alt={`${reply.authorName || "User"}'s avatar`}
+                              />
+                              <AvatarFallback>
+                                {reply.authorName?.charAt(0).toUpperCase() ||
+                                  "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-base font-semibold">
+                                {reply.authorName || "Anonymous"}
+                              </p>
+                              {/* Placeholder for username - Update if username field is added to Reply interface */}
+                              {/* <p className="text-xs text-muted-foreground">@username_placeholder</p> */}
+                            </div>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                      <div className="flex-1 bg-background/50 p-2 rounded-md">
+                        <div className="flex items-baseline justify-between">
+                          <span className="font-medium text-xs">
+                            {reply.authorName || "Anonymous"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimestamp(reply.createdAt)}
+                          </span>
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap">{reply.text}</p>
                       </div>
-                      <p className="mt-1 whitespace-pre-wrap">{reply.text}</p>
+                      {/* Reply Delete Button (reply author or post author) */}
+                      {user &&
+                        (user.uid === reply.authorId ||
+                          user.uid === post.authorId) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-0 right-0 h-6 w-6 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteReplyClick(reply.id)}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span className="sr-only">Delete Reply</span>
+                          </Button>
+                        )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </CardFooter>
-    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+
+      {/* Delete Post Confirmation Dialog */}
+      <AlertDialog
+        open={showDeletePostConfirm}
+        onOpenChange={setShowDeletePostConfirm}
+      >
+        <AlertDialogContent className="bg-white dark:bg-zinc-950">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this
+              post and all associated replies and likes. (Note: Subcollection
+              deletion may require manual cleanup or a Cloud Function for
+              completeness).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeletePost}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete Post"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Reply Confirmation Dialog */}
+      <AlertDialog
+        open={showDeleteReplyConfirm}
+        onOpenChange={setShowDeleteReplyConfirm}
+      >
+        <AlertDialogContent className="bg-background">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this reply?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. Are you sure you want to permanently
+              delete this reply?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteReply}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete Reply"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

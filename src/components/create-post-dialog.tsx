@@ -3,8 +3,7 @@
 import { useState, useRef } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "@/lib/firebaseConfig"; // Adjust path if needed
+import { auth, db } from "@/lib/firebaseConfig"; // Adjust path if needed
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,38 +77,57 @@ export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
     }
 
     setIsSubmitting(true);
-    let imageUrl = null;
+    let imageUrl: string | null = null; // Ensure imageUrl is typed as string | null
 
     try {
-      // 1. Upload Image if selected
+      // 1. Upload Image via API route if selected
       if (imageFile) {
-        const imageRef = ref(
-          storage,
-          `posts/${user.uid}/${Date.now()}_${imageFile.name}`
-        );
-        const snapshot = await uploadBytes(imageRef, imageFile);
-        imageUrl = await getDownloadURL(snapshot.ref);
+        console.log("Uploading post image via API route...");
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        const response = await fetch("/api/upload-post-image", {
+          method: "POST",
+          body: formData,
+          // Optional: Add auth header if API route requires it
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || `API Error: ${response.statusText}`
+          );
+        }
+
+        const result = await response.json();
+        imageUrl = result.secureUrl;
+
+        if (!imageUrl) {
+          throw new Error("Post image API did not return a secure URL.");
+        }
+        console.log("Cloudinary URL for post image:", imageUrl);
       }
 
       // 2. Add Post to Firestore
+      console.log("Adding post document to Firestore...");
       const postsCollectionRef = collection(db, "posts");
       await addDoc(postsCollectionRef, {
         title: title.trim(),
         description: description.trim(),
         link: link.trim() || null,
-        imageUrl: imageUrl, // Will be null if no image was uploaded
+        imageUrl: imageUrl, // Use Cloudinary URL or null
         authorId: user.uid,
-        authorName: user.displayName || user.email || "Anonymous", // Use available user info
+        authorName: user.displayName || user.email || "Anonymous",
         authorAvatar: user.photoURL || null,
-        createdAt: serverTimestamp(), // Use server timestamp
-        // Add other fields like likes, comments count later
+        createdAt: serverTimestamp(),
         likes: 0,
       });
+      console.log("Post document added.");
 
       toast.success("Post created successfully!");
       resetForm();
-      setIsOpen(false); // Close dialog on success
-      onPostCreated?.(); // Callback to trigger refetch or update
+      setIsOpen(false);
+      onPostCreated?.();
     } catch (error: unknown) {
       console.error("Error creating post:", error);
       const errorMessage =

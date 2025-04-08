@@ -18,6 +18,7 @@ import { CreatePostDialog } from "@/components/create-post-dialog";
 import { PostCard, Post } from "@/components/post-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from "next/image";
 
 // Helper function to create placeholder skeletons
 const PostSkeleton = () => (
@@ -123,6 +124,17 @@ export default function FanHubPage() {
     }
   }, [user, authLoading, router]);
 
+  // --- Handler for Post Deletion ---
+  const handlePostDeleted = (deletedPostId: string) => {
+    console.log("Removing deleted post from UI:", deletedPostId); // Debug Log
+    setExplorePosts((prevPosts) =>
+      prevPosts.filter((post) => post.id !== deletedPostId)
+    );
+    setMyPosts((prevPosts) =>
+      prevPosts.filter((post) => post.id !== deletedPostId)
+    );
+  };
+
   // --- Render Logic ---
   if (authLoading) {
     return (
@@ -183,15 +195,38 @@ export default function FanHubPage() {
             <CreatePostDialog onPostCreated={fetchPosts} />
           </div>
         </div>
-        <Separator className="mb-8" />
 
-        {/* Tabs Layout */}
+        {/* --- Retro Banner --- */}
+        <div className="relative w-full aspect-[4/1] mb-8 overflow-hidden rounded-lg shadow-lg">
+          <Image
+            src="/fan-hub-banner.jpg" // Assumes the GIF is in /public/fan-hub-banner.gif
+            alt="Fan Hub Retro Banner"
+            layout="fill" // Fill the container
+            objectFit="cover" // Cover the container area
+            unoptimized={true} // Important for GIFs
+            priority // Load the banner early
+          />
+        </div>
+        {/* --- End Retro Banner --- */}
+
+        <Separator className="mb-8 border-dashed border-muted-foreground/50" />
+
+        {/* Tabs Layout - Updated Styling */}
         <Tabs defaultValue="explore" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            {" "}
-            {/* Tab Triggers */}
-            <TabsTrigger value="explore">Explore</TabsTrigger>
-            <TabsTrigger value="my-posts">My Posts</TabsTrigger>
+          {/* Remove default grid layout, add custom styling */}
+          <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted/60 p-1 text-muted-foreground mb-6 w-full sm:w-auto gap-1 border border-border/50 shadow-inner">
+            <TabsTrigger
+              value="explore"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-4 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-primary/90 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:font-semibold hover:text-primary"
+            >
+              🚀 Explore
+            </TabsTrigger>
+            <TabsTrigger
+              value="my-posts"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-4 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-primary/90 data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:font-semibold hover:text-primary"
+            >
+              👤 My Posts
+            </TabsTrigger>
           </TabsList>
 
           {/* Explore Tab Content */}
@@ -215,6 +250,7 @@ export default function FanHubPage() {
                     key={`explore-${post.id}`}
                     post={post}
                     onLikeUpdated={fetchPosts}
+                    onPostDeleted={handlePostDeleted}
                   />
                 ))
               )}
@@ -241,6 +277,7 @@ export default function FanHubPage() {
                     key={`my-${post.id}`}
                     post={post}
                     onLikeUpdated={fetchPosts}
+                    onPostDeleted={handlePostDeleted}
                   />
                 ))
               )}
