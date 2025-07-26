@@ -117,19 +117,43 @@ export function Navbar() {
   const navLinks = (
     <>
       <Link
-        href="https://www.buymeacoffee.com/mhsenam"
+        href="http://coff.ee/mhsenam"
         target="_blank"
         rel="noopener noreferrer"
       >
         <Button
           variant="default"
           size="sm"
-          className="cursor-pointer bg-yellow-400 hover:bg-yellow-300 text-black font-semibold mr-2 flex items-center gap-1"
+          className="cursor-pointer bg-yellow-400 hover:bg-yellow-300 text-black font-semibold mr-2 flex items-center gap-1 relative overflow-hidden shadow transition-shadow duration-300 group hover:shadow-2xl hover:shadow-yellow-400/80"
+          style={{ position: "relative" }}
         >
           <span role="img" aria-label="coffee">
             ☕
           </span>{" "}
           Buy me a coffee
+          <span className="absolute left-[-75%] top-0 h-full w-1/2 bg-white/40 opacity-0 group-hover:opacity-100 group-hover:animate-shine pointer-events-none rounded-full" />
+          <style jsx global>{`
+            @keyframes shine {
+              0% {
+                left: -75%;
+                opacity: 0;
+              }
+              20% {
+                opacity: 0.5;
+              }
+              60% {
+                left: 120%;
+                opacity: 0.5;
+              }
+              100% {
+                left: 120%;
+                opacity: 0;
+              }
+            }
+            .group:hover .group-hover\\:animate-shine {
+              animation: shine 1s linear;
+            }
+          `}</style>
         </Button>
       </Link>
       <Link href="/articles" className={linkClasses}>
