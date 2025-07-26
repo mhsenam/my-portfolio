@@ -1,3 +1,9 @@
+# *
 User-agent: *
 Allow: /
-Sitemap: https://mhsenam.com/sitemap.xml 
+
+# Host
+Host: https://mhsenam.ir
+
+# Sitemaps
+Sitemap: https://mhsenam.ir/sitemap.xml
