@@ -55,7 +55,7 @@ export function ProjectCard({
       <div className="flex flex-col items-center px-6 pt-6 flex-1">
         <Image
           src={project.image}
-          alt={project.title}
+          alt={`${project.title} project screenshot by Mohsen Amini`}
           width={120}
           height={120}
           className="w-32 h-32 object-contain bg-muted rounded-lg mb-2"

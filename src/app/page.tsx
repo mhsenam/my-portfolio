@@ -38,13 +38,16 @@ export default async function Home() {
   const avatarUrl = githubUser?.avatar_url || "https://github.com/shadcn.png";
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-16 md:p-24 bg-gradient-to-b from-background to-secondary/20">
+    <main
+      className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-16 md:p-24 bg-gradient-to-b from-background to-secondary/20"
+      aria-label="Homepage"
+    >
       <div className="container mx-auto px-4 py-16 space-y-16 sm:space-y-24">
         {/* Hero Section - Wrap with AnimatedHero */}
         <AnimatedHero className="text-center space-y-6">
           {/* Increase Avatar size */}
           <Avatar className="w-32 h-32 sm:w-40 sm:h-40 mx-auto border-4 border-primary shadow-lg hero-avatar">
-            <AvatarImage src={avatarUrl} alt={username} />
+            <AvatarImage src={avatarUrl} alt="Mohsen Amini profile avatar" />
             <AvatarFallback>
               {username.substring(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -123,7 +126,7 @@ export default async function Home() {
         </section>
 
         {/* My Projects Section */}
-        <section className="py-12">
+        <section className="py-12" aria-label="My Projects">
           <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-8">
             My Projects
           </h2>

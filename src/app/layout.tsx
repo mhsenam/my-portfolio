@@ -5,6 +5,7 @@ import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
 import { AnimatedDottedBackground } from "@/components/animated-background";
 import ScrollProgressBar from "@/components/scroll-progress-bar";
+import Head from "next/head";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -98,6 +99,45 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Person",
+              name: "Mohsen Amini",
+              alternateName: "mhsenam",
+              url: "https://mhsenam.com/",
+              image: "https://mhsenam.com/fan-hub-banner.jpg",
+              sameAs: [
+                "https://github.com/mhsenam",
+                "https://www.linkedin.com/in/mhsenam/",
+                "https://x.com/Mhsenam",
+              ],
+              jobTitle: "AI Specialist & Web Developer",
+              description:
+                "Official portfolio of Mohsen Amini (mhsenam): AI Specialist, Web Developer, and innovator.",
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              url: "https://mhsenam.com/",
+              name: "Mohsen Amini Portfolio",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://mhsenam.com/?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+      </Head>
       <body className={`${poppins.variable} ${lato.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
