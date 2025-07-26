@@ -1,0 +1,16 @@
+{
+  "name": "Mohsen Amini Portfolio",
+  "short_name": "mhsenam",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#10172a",
+  "theme_color": "#10172a",
+  "description": "Official portfolio of Mohsen Amini (mhsenam): AI Specialist, Web Developer, and innovator.",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

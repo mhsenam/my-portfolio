@@ -55,7 +55,7 @@ async function getGitHubRepos(username: string): Promise<GitHubRepo[]> {
   try {
     // Fetch initial repo list
     const repoListResponse = await fetch(
-      `https://api.github.com/users/${username}/repos?sort=updated&direction=desc&per_page=6`,
+      `https://api.github.com/users/${username}/repos?sort=updated&direction=desc&per_page=3`,
       {
         next: { revalidate: 3600 }, // Cache for 1 hour
         headers: {

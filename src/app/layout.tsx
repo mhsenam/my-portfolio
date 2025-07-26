@@ -18,8 +18,76 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "Mohsen Amini - AI Specialist & Web Developer",
-  description: "Portfolio of Mohsen Amini, AI Specialist & Web Developer",
+  title: "Mohsen Amini - AI Specialist & Web Developer | mhsenam",
+  description:
+    "Official portfolio of Mohsen Amini (mhsenam): AI Specialist, Web Developer, and innovator. Explore projects, articles, and contact info. Expert in Next.js, React, and AI integration.",
+  keywords: [
+    "Mohsen Amini",
+    "mhsenam",
+    "AI Specialist",
+    "Web Developer",
+    "Next.js",
+    "React",
+    "Portfolio",
+    "Artificial Intelligence",
+    "Frontend Engineer",
+    "Software Engineer",
+    "Iranian Developer",
+    "Open Source",
+    "JavaScript",
+    "TypeScript",
+    "Tech Blog",
+    "Personal Website",
+  ],
+  openGraph: {
+    title: "Mohsen Amini - AI Specialist & Web Developer | mhsenam",
+    description:
+      "Official portfolio of Mohsen Amini (mhsenam): AI Specialist, Web Developer, and innovator. Explore projects, articles, and contact info.",
+    url: "https://mhsenam.com/",
+    siteName: "Mohsen Amini Portfolio",
+    images: [
+      {
+        url: "/fan-hub-banner.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Mohsen Amini Portfolio Banner",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mohsen Amini - AI Specialist & Web Developer | mhsenam",
+    description:
+      "Official portfolio of Mohsen Amini (mhsenam): AI Specialist, Web Developer, and innovator.",
+    site: "@mhsenam",
+    creator: "@mhsenam",
+    images: ["/fan-hub-banner.jpg"],
+  },
+  alternates: {
+    canonical: "https://mhsenam.com/",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  manifest: "/manifest.json",
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+    },
+  },
+  themeColor: "#10172a",
+  other: {
+    "msapplication-TileColor": "#10172a",
+  },
 };
 
 export default function RootLayout({

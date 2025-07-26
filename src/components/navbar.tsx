@@ -116,6 +116,22 @@ export function Navbar() {
 
   const navLinks = (
     <>
+      <Link
+        href="https://www.buymeacoffee.com/mhsenam"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Button
+          variant="default"
+          size="sm"
+          className="cursor-pointer bg-yellow-400 hover:bg-yellow-300 text-black font-semibold mr-2 flex items-center gap-1"
+        >
+          <span role="img" aria-label="coffee">
+            ☕
+          </span>{" "}
+          Buy me a coffee
+        </Button>
+      </Link>
       <Link href="/articles" className={linkClasses}>
         My Articles
       </Link>
@@ -372,6 +388,17 @@ export function Navbar() {
                 Navigation
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className={mobileLinkClasses}>
+                <Link
+                  href="https://www.buymeacoffee.com/mhsenam"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="flex items-center gap-1">
+                    ☕ Buy me a coffee
+                  </span>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild className={mobileLinkClasses}>
                 <Link href="/articles">My Articles</Link>
               </DropdownMenuItem>

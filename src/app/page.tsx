@@ -5,46 +5,8 @@ import Link from "next/link";
 import { GitHubRepos } from "@/components/github-repos"; // Import the new component
 import { AnimatedText } from "@/components/animated-text"; // Import AnimatedText
 import { ContactPopover } from "@/components/contact-popover"; // Import the popover
-import { AnimatedCard } from "@/components/animated-card"; // Import AnimatedCard
-import { AnimatedHero } from "@/components/animated-hero"; // Import AnimatedHero
-import { ArticleCard } from "@/components/article-card"; // Import ArticleCard
-import LatestVideos from "@/components/latest-videos"; // Import the component
-
-// Static data for example articles (same as in articles/page.tsx)
-const staticArticles = [
-  {
-    id: 1,
-    title: "The Future of AI in Web Development",
-    description:
-      "Exploring how AI is reshaping the landscape of creating websites and applications.",
-    tags: ["AI", "Web Development", "Future Tech"],
-    slug: "future-of-ai-in-web-dev",
-  },
-  {
-    id: 2,
-    title: "Getting Started with GSAP Animations",
-    description:
-      "A beginner's guide to creating smooth and performant animations with GSAP.",
-    tags: ["GSAP", "Animation", "JavaScript"],
-    slug: "getting-started-with-gsap",
-  },
-  {
-    id: 3,
-    title: "Building Modern UIs with shadcn/ui",
-    description:
-      "Leveraging shadcn/ui components for accessible and visually appealing interfaces.",
-    tags: ["shadcn/ui", "React", "UI/UX"],
-    slug: "building-with-shadcn-ui",
-  },
-  {
-    id: 4,
-    title: "Optimizing Next.js Apps",
-    description:
-      "Tips and tricks for improving the performance and speed of your Next.js applications.",
-    tags: ["Next.js", "Performance", "Optimization"],
-    slug: "optimizing-nextjs-apps",
-  },
-];
+import { AnimatedHero } from "@/components/animated-hero";
+import { ProjectCard, ProjectInfo } from "@/components/project-card";
 
 // Function to fetch GitHub user data
 async function getGitHubUser(username: string) {
@@ -74,9 +36,6 @@ export default async function Home() {
   const githubUser = await getGitHubUser(username);
   // Use fetched URL or fallback
   const avatarUrl = githubUser?.avatar_url || "https://github.com/shadcn.png";
-
-  // Get latest 3 articles
-  const latestArticles = staticArticles.slice(0, 3);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-16 md:p-24 bg-gradient-to-b from-background to-secondary/20">
@@ -143,32 +102,6 @@ export default async function Home() {
           </div>
         </AnimatedHero>
 
-        {/* Latest Articles Section */}
-        <section className="text-center">
-          <AnimatedText
-            el="h2"
-            text="Latest Articles"
-            className="text-3xl sm:text-4xl font-bold text-primary mb-12 font-heading"
-            wordAnimation={true}
-          />
-          <div className="grid md:grid-cols-3 gap-8">
-            {latestArticles.map((article, index) => (
-              <AnimatedCard key={article.id} index={index}>
-                <ArticleCard article={article} />
-              </AnimatedCard>
-            ))}
-          </div>
-          {/* Optional: Link to all articles */}
-          <div className="mt-12">
-            <Link href="/articles">
-              <Button variant="outline">View All Articles</Button>
-            </Link>
-          </div>
-        </section>
-
-        {/* Add Latest Videos Section */}
-        <LatestVideos />
-
         {/* About Section */}
         <section className="text-center space-y-6 max-w-3xl mx-auto">
           <AnimatedText
@@ -187,6 +120,64 @@ export default async function Home() {
             tech to solve complex problems and build seamless, intuitive digital
             solutions.
           </p>
+        </section>
+
+        {/* My Projects Section */}
+        <section className="py-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-8">
+            My Projects
+          </h2>
+          {/* Example project data array */}
+          {(() => {
+            const projects: ProjectInfo[] = [
+              {
+                title: "Pet Mate",
+                image: "/project_icons/petmate.png",
+                description: [
+                  "Pet Mate is a platform for pet owners to find and connect with other",
+                ],
+                link: "http://petmate.ir/",
+                skills: [
+                  "React",
+                  "Next.js",
+                  "TypeScript",
+                  "Firebase",
+                  "TailwindCSS",
+                ],
+              },
+              {
+                title: "Meetify",
+                image: "/project_icons/meetify.png",
+                description: [
+                  "Meetify is a platform for creating and joining events.",
+                ],
+                link: "https://meetify.mhsenam.ir/",
+                skills: [
+                  "React",
+                  "Next.js",
+                  "TypeScript",
+                  "Firebase",
+                  "TailwindCSS",
+                ],
+              },
+              {
+                title: "YouTube Downloader",
+                image: "/project_icons/yl.png",
+                description: [
+                  "YouTube Downloader is a tool for downloading YouTube videos.",
+                ],
+                link: "https://dl.mhsenam.ir",
+                skills: ["HTML", "CSS", "JavaScript"],
+              },
+            ];
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project, i) => (
+                  <ProjectCard key={i} project={project} i={i} />
+                ))}
+              </div>
+            );
+          })()}
         </section>
 
         {/* GitHub Repos Section */}
