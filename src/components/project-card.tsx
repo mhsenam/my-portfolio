@@ -50,7 +50,7 @@ export function ProjectCard({
   return (
     <Card
       ref={cardRef}
-      className="group relative flex flex-col justify-between items-stretch hover:shadow-md transition-shadow h-[370px] max-h-[370px] min-h-[370px] p-0"
+      className="group relative flex flex-col justify-between items-stretch hover:shadow-md transition-shadow h-[370px] max-h-[500px] min-h-[400px] p-0"
     >
       <div className="flex flex-col items-center px-6 pt-6 flex-1">
         <Image
@@ -90,13 +90,13 @@ export function ProjectCard({
             ))}
           </div>
         </div>
-        <div className="w-full flex justify-center items-end px-6 pb-4">
+        <div className="w-full flex justify-center items-end">
           <a
             href={project.link}
             target="_blank"
             rel="noopener noreferrer"
             title="Open Project"
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow dark:shadow-none"
+            className="w-full max-w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-2 rounded font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow dark:shadow-none"
           >
             <ExternalLink className="h-4 w-4" />
             View Project

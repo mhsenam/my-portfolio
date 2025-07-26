@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
 import { AnimatedDottedBackground } from "@/components/animated-background";
+import ScrollProgressBar from "@/components/scroll-progress-bar";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -106,6 +107,7 @@ export default function RootLayout({
         >
           <AnimatedDottedBackground />
           <Navbar />
+          <ScrollProgressBar />
           <main className="pt-16 relative z-10">{children}</main>
         </ThemeProvider>
       </body>
