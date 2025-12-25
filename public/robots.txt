@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://mhsenam.ir
+Host: https://mhsenam.com
 
 # Sitemaps
-Sitemap: https://mhsenam.ir/sitemap.xml
+Sitemap: https://mhsenam.com/sitemap.xml

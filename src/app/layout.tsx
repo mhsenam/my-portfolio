@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Lato } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./providers";
@@ -17,6 +17,10 @@ const lato = Lato({
   weight: ["400", "700"],
   variable: "--font-lato",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
+};
 
 export const metadata: Metadata = {
   title: "Mohsen Amini - AI Specialist & Web Developer | mhsenam",
@@ -85,7 +89,6 @@ export const metadata: Metadata = {
       noimageindex: false,
     },
   },
-  themeColor: "#0a0a0a",
   other: {
     "msapplication-TileColor": "#0a0a0a",
   },

@@ -9,9 +9,8 @@ import { getProfilePhoto } from "@/lib/linkedin";
 
 // Make component async
 export default async function Home() {
-  const username = "mhsenam";
-  // Fetch profile photo from LinkedIn (with GitHub fallback)
-  const avatarUrl = await getProfilePhoto(username);
+  // Fetch profile photo
+  const avatarUrl = await getProfilePhoto();
 
   // Project data
   const projects: ProjectInfo[] = [
@@ -137,7 +136,7 @@ export default async function Home() {
               Latest <span className="text-gradient">Contributions</span>
             </h2>
           </div>
-          <GitHubRepos username={username} />
+          <GitHubRepos username="mhsenam" />
         </div>
       </section>
 
