@@ -3,7 +3,6 @@ import { Poppins, Lato } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
-import { AnimatedDottedBackground } from "@/components/animated-background";
 import ScrollProgressBar from "@/components/scroll-progress-bar";
 import Head from "next/head";
 
@@ -86,9 +85,9 @@ export const metadata: Metadata = {
       noimageindex: false,
     },
   },
-  themeColor: "#10172a",
+  themeColor: "#0a0a0a",
   other: {
-    "msapplication-TileColor": "#10172a",
+    "msapplication-TileColor": "#0a0a0a",
   },
 };
 
@@ -98,13 +97,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <Head>
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -143,17 +142,16 @@ export default function RootLayout({
           }}
         />
       </Head>
-      <body className={`${poppins.variable} ${lato.variable} font-sans`}>
+      <body className={`${poppins.variable} ${lato.variable} font-sans noise`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <AnimatedDottedBackground />
           <Navbar />
           <ScrollProgressBar />
-          <main className="pt-16 relative z-10">{children}</main>
+          <main className="relative z-10">{children}</main>
         </ThemeProvider>
       </body>
     </html>
