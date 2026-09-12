@@ -62,7 +62,7 @@ export function ProjectCard({
           priority={i === 0}
           unoptimized={project.image.endsWith(".svg")}
         />
-        <div className="font-semibold text-base text-center mb-1 dark:text-white text-black w-full truncate">
+        <div className="font-semibold text-base text-center mb-1 text-foreground w-full truncate">
           {project.title}
         </div>
         <div className="w-full overflow-y-auto max-h-[2.8em] min-h-[2.8em] text-center mb-2 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
@@ -76,14 +76,14 @@ export function ProjectCard({
           ))}
         </div>
         <div className="rounded-md p-2 mt-2 mb-2 w-full">
-          <span className="block text-xs font-semibold mb-1 dark:text-white text-black">
+          <span className="block text-xs font-semibold mb-1 text-foreground">
             Skills
           </span>
           <div className="flex flex-wrap gap-2 justify-center">
             {project.skills.map((skill, sidx) => (
               <span
                 key={sidx}
-                className="px-2 py-0.5 rounded text-xs font-medium bg-white/90 text-black dark:bg-black/90 dark:text-white border border-neutral-300 dark:border-neutral-700"
+                className="px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground border border-border"
               >
                 {skill}
               </span>
@@ -96,7 +96,7 @@ export function ProjectCard({
             target="_blank"
             rel="noopener noreferrer"
             title="Open Project"
-            className="w-full max-w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-2 rounded font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90 dark:bg-white dark:text-black dark:hover:bg-gray-200 shadow dark:shadow-none"
+            className="w-full max-w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-2 rounded font-semibold text-sm transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow"
           >
             <ExternalLink className="h-4 w-4" />
             View Project

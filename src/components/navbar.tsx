@@ -124,14 +124,14 @@ export function Navbar() {
         <Button
           variant="default"
           size="sm"
-          className="cursor-pointer bg-yellow-400 hover:bg-yellow-300 text-black font-semibold mr-2 flex items-center gap-1 relative overflow-hidden shadow transition-shadow duration-300 group hover:shadow-2xl hover:shadow-yellow-400/80"
+          className="cursor-pointer font-mono font-semibold mr-2 flex items-center gap-1.5 relative overflow-hidden bg-secondary text-[var(--syntax-yellow)] border border-border hover:border-[var(--syntax-yellow)]/50 hover:bg-secondary/80 shadow transition-all duration-300 group hover:shadow-lg hover:shadow-[var(--syntax-yellow)]/20"
           style={{ position: "relative" }}
         >
           <span role="img" aria-label="coffee">
             ☕
           </span>{" "}
-          Buy me a coffee
-          <span className="absolute left-[-75%] top-0 h-full w-1/2 bg-white/40 opacity-0 group-hover:opacity-100 group-hover:animate-shine pointer-events-none rounded-full" />
+          brew --sponsor
+          <span className="absolute left-[-75%] top-0 h-full w-1/2 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:animate-shine pointer-events-none rounded-full" />
           <style jsx global>{`
             @keyframes shine {
               0% {
