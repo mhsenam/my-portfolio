@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
-import { PostCard, Post } from "@/components/post-card";
+import dynamic from "next/dynamic";
+import type { Post } from "@/components/post-card";
+
+// The post is fetched client-side, so none of Firestore/PostCard needs to be
+// in this route's initial JS — they load while the fetch is in flight.
+const PostCard = dynamic(
+  () => import("@/components/post-card").then((m) => m.PostCard),
+  { ssr: false }
+);
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SinglePostPage() {
@@ -31,6 +37,10 @@ export default function SinglePostPage() {
       setLoading(true);
       setError(null);
       try {
+        const [{ db }, { doc, getDoc }] = await Promise.all([
+          import("@/lib/firebaseConfig"),
+          import("firebase/firestore"),
+        ]);
         const postRef = doc(db, "posts", postId);
         const postSnap = await getDoc(postRef);
 

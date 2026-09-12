@@ -138,14 +138,11 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    cursor: none; /* Hide default cursor for custom cursor */
-  }
-
-  /* Show default cursor on touch devices */
-  @media (hover: none) and (pointer: coarse) {
-    body {
-      cursor: auto;
-    }
+    /* NOTE: the native cursor is intentionally NOT hidden here. It is only
+       hidden while <CustomCursor /> reports it is live, via
+       `html.custom-cursor-active` (see "Custom cursor" below). Hiding it
+       unconditionally meant there was no cursor at all until the JS bundle had
+       downloaded and hydrated. */
   }
 
   /* Custom scrollbar — chunky terminal style */
@@ -387,9 +384,55 @@
   }
 }
 
-/* Hide cursor on interactive elements when custom cursor is active */
-body:not(:hover) {
-  cursor: auto;
+/* ── Custom cursor ─────────────────────────────────────────────
+   The layers are hidden by default in CSS (not by JS), so nothing is painted
+   in the corner of the viewport before React hydrates. GSAP fades them in the
+   moment the component knows where the pointer is. */
+.cursor-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Above .noise (9999) and .loading-screen (99999) so an overlay can never
+     swallow the cursor. */
+  z-index: 100000;
+  pointer-events: none;
+  border-radius: 9999px;
+  opacity: 0;
+  will-change: transform, opacity;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Hide the native cursor ONLY while the custom one is live and tracking.
+   `custom-cursor-active` is toggled on <html> by <CustomCursor />, so a slow
+   bundle, a slow server render, a JS error or a touch device all fall back to
+   the normal cursor instead of leaving the visitor with none. */
+html.custom-cursor-active,
+html.custom-cursor-active * {
+  cursor: none !important;
+}
+
+/* Form fields keep the native caret/pointer — the custom cursor hides over
+   them. Keep in sync with EDITABLE_SELECTOR in components/custom-cursor.tsx. */
+html.custom-cursor-active input,
+html.custom-cursor-active textarea,
+html.custom-cursor-active select,
+html.custom-cursor-active [contenteditable="true"],
+html.custom-cursor-active [contenteditable=""] {
+  cursor: auto !important;
+}
+
+/* Touch devices never get the custom cursor. */
+@media (hover: none) and (pointer: coarse) {
+  html.custom-cursor-active,
+  html.custom-cursor-active * {
+    cursor: auto !important;
+  }
+
+  .cursor-layer {
+    display: none;
+  }
 }
 
 /* Loading screen styles */
