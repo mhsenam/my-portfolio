@@ -3,7 +3,7 @@ import { ModernProjectCard, ProjectInfo } from "@/components/modern-project-card
 import { CustomCursor } from "@/components/custom-cursor";
 import { ContactPopover } from "@/components/contact-popover";
 import { GitHubRepos } from "@/components/github-repos";
-import { Mail, ArrowUpRight } from "lucide-react";
+import { Mail, ArrowUpRight, Sparkles, Code2, Palette } from "lucide-react";
 import Link from "next/link";
 import { getProfilePhoto } from "@/lib/linkedin";
 
@@ -39,6 +39,24 @@ export default async function Home() {
     },
   ];
 
+  const highlights = [
+    {
+      icon: Sparkles,
+      title: "AI Integration",
+      text: "Intelligent features powered by modern machine-learning tooling.",
+    },
+    {
+      icon: Code2,
+      title: "Modern Web",
+      text: "Fast, accessible apps built on Next.js, React & TypeScript.",
+    },
+    {
+      icon: Palette,
+      title: "Design Craft",
+      text: "Pixel-perfect interfaces with motion and delightful details.",
+    },
+  ];
+
   return (
     <>
       <CustomCursor />
@@ -47,16 +65,17 @@ export default async function Home() {
       <ModernHero avatarUrl={avatarUrl} />
 
       {/* About Section */}
-      <section className="relative py-32 px-4 noise">
-        <div className="container mx-auto max-w-5xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="relative py-32 px-4">
+        {/* Ambient glow */}
+        <div className="absolute top-0 right-0 w-[30rem] h-[30rem] rounded-full blur-[140px] opacity-10 pointer-events-none" style={{ background: "var(--glow-2)" }} />
+
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
-              <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                About Me
-              </span>
-              <h2 className="text-4xl md:text-5xl font-bold font-heading">
+              <span className="eyebrow">About Me</span>
+              <h2 className="text-4xl md:text-5xl font-bold font-heading tracking-tight">
                 Crafting Digital
-                <span className="text-gradient"> Experiences</span>
+                <span className="text-gradient animate-gradient-x"> Experiences</span>
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 I&apos;m Mohsen Amini, a passionate developer specializing in the intersection
@@ -67,22 +86,44 @@ export default async function Home() {
                 From intelligent automation to stunning interfaces, I bring ideas to life
                 with cutting-edge technology and meticulous attention to detail.
               </p>
+
+              {/* Highlight chips */}
+              <div className="grid sm:grid-cols-3 gap-3 pt-2">
+                {highlights.map((h) => {
+                  const Icon = h.icon;
+                  return (
+                    <div key={h.title} className="glass rounded-2xl p-4 hover:border-primary/40 transition-colors duration-300">
+                      <Icon className="w-5 h-5 text-primary mb-2" />
+                      <p className="text-sm font-semibold mb-1">{h.title}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{h.text}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Code window */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-3xl blur-3xl" />
-              <div className="relative glass rounded-3xl p-8 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div
+                className="absolute -inset-4 rounded-[2rem] blur-3xl opacity-20"
+                style={{ background: "linear-gradient(135deg, var(--glow-1), var(--glow-2))" }}
+              />
+              <div className="gradient-border relative rounded-3xl overflow-hidden shadow-2xl">
+                {/* Title bar */}
+                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/60 bg-secondary/40">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                  <span className="ml-3 text-xs text-muted-foreground font-mono">developer.ts</span>
                 </div>
-                <div className="font-mono text-sm space-y-2">
-                  <p><span className="text-purple-400">const</span> <span className="text-blue-400">developer</span> = {"{}"}</p>
-                  <p className="pl-4"><span className="text-green-400">name</span>: <span className="text-yellow-400">{"\"Mohsen Amini\""}</span>,</p>
-                  <p className="pl-4"><span className="text-green-400">skills</span>: [<span className="text-yellow-400">{"\"AI\""}</span>, <span className="text-yellow-400">{"\"Web Dev\""}</span>, <span className="text-yellow-400">{"\"UI/UX\""}</span>],</p>
-                  <p className="pl-4"><span className="text-green-400">passion</span>: <span className="text-purple-400">Infinity</span>,</p>
-                  <p className="pl-4"><span className="text-green-400">coffee</span>: <span className="text-orange-400">true</span></p>
-                  <p>{"\"}\";"}</p>
+                <div className="font-mono text-sm space-y-2 p-6 leading-relaxed">
+                  <p><span className="text-muted-foreground/50 select-none mr-4">1</span><span className="text-purple-400">const</span> <span className="text-blue-400">developer</span> = {"{"}</p>
+                  <p><span className="text-muted-foreground/50 select-none mr-4">2</span><span className="pl-4"><span className="text-emerald-400">name</span>: <span className="text-amber-300">&quot;Mohsen Amini&quot;</span>,</span></p>
+                  <p><span className="text-muted-foreground/50 select-none mr-4">3</span><span className="pl-4"><span className="text-emerald-400">skills</span>: [<span className="text-amber-300">&quot;AI&quot;</span>, <span className="text-amber-300">&quot;Web Dev&quot;</span>, <span className="text-amber-300">&quot;UI/UX&quot;</span>],</span></p>
+                  <p><span className="text-muted-foreground/50 select-none mr-4">4</span><span className="pl-4"><span className="text-emerald-400">passion</span>: <span className="text-purple-400">Infinity</span>,</span></p>
+                  <p><span className="text-muted-foreground/50 select-none mr-4">5</span><span className="pl-4"><span className="text-emerald-400">coffee</span>: <span className="text-orange-400">true</span>,</span></p>
+                  <p><span className="text-muted-foreground/50 select-none mr-4">6</span>{"}"};</p>
+                  <p><span className="text-muted-foreground/50 select-none mr-4">7</span><span className="inline-block w-2 h-4 bg-primary/70 animate-pulse align-middle" /></p>
                 </div>
               </div>
             </div>
@@ -92,15 +133,15 @@ export default async function Home() {
 
       {/* Projects Section */}
       <section id="projects" className="relative py-32 px-4">
+        <div className="absolute top-1/4 left-0 w-[28rem] h-[28rem] rounded-full blur-[140px] opacity-10 pointer-events-none" style={{ background: "var(--glow-1)" }} />
+
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              Featured Work
-            </span>
-            <h2 className="text-4xl md:text-6xl font-bold font-heading mb-4">
-              Selected <span className="text-gradient">Projects</span>
+            <span className="eyebrow mb-4">Featured Work</span>
+            <h2 className="text-4xl md:text-6xl font-bold font-heading tracking-tight mb-4 mt-4">
+              Selected <span className="text-gradient animate-gradient-x">Projects</span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               A collection of projects showcasing my skills in AI, web development, and creative problem-solving.
             </p>
           </div>
@@ -111,12 +152,12 @@ export default async function Home() {
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-14">
             <Link
               href="https://github.com/mhsenam?tab=repositories"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full glass font-medium hover:border-primary/50 hover:text-primary transition-all duration-300 hover:scale-105"
             >
               View All Projects
               <ArrowUpRight className="w-4 h-4" />
@@ -126,14 +167,14 @@ export default async function Home() {
       </section>
 
       {/* GitHub Repos Section */}
-      <section className="relative py-32 px-4 noise">
+      <section className="relative py-32 px-4">
+        <div className="absolute bottom-0 right-1/4 w-[26rem] h-[26rem] rounded-full blur-[140px] opacity-10 pointer-events-none" style={{ background: "var(--glow-3)" }} />
+
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              Open Source
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold font-heading mb-4">
-              Latest <span className="text-gradient">Contributions</span>
+            <span className="eyebrow mb-4">Open Source</span>
+            <h2 className="text-4xl md:text-5xl font-bold font-heading tracking-tight mt-4">
+              Latest <span className="text-gradient animate-gradient-x">Contributions</span>
             </h2>
           </div>
           <GitHubRepos username="mhsenam" />
@@ -143,37 +184,40 @@ export default async function Home() {
       {/* Contact Section */}
       <section className="relative py-32 px-4 overflow-hidden">
         {/* Background effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50rem] h-[50rem] rounded-full blur-[160px] opacity-15"
+            style={{ background: "linear-gradient(135deg, var(--glow-1), var(--glow-2))" }}
+          />
         </div>
 
         <div className="container mx-auto max-w-4xl relative z-10">
-          <div className="glass rounded-3xl p-12 text-center space-y-8">
-            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              Get In Touch
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold font-heading">
-              Let&apos;s Build Something <span className="text-gradient">Amazing</span>
+          <div className="gradient-border glass rounded-[2rem] p-10 md:p-16 text-center space-y-8">
+            <span className="eyebrow">Get In Touch</span>
+            <h2 className="text-4xl md:text-5xl font-bold font-heading tracking-tight">
+              Let&apos;s Build Something <span className="text-gradient animate-gradient-x">Amazing</span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Have a project in mind or want to collaborate? I&apos;m always open to discussing new ideas and opportunities.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
               <Link
                 href="mailto:mohsenamini1081@gmail.com"
-                className="group px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold flex items-center gap-2 hover:scale-105 transition-transform duration-300 shadow-lg shadow-primary/30"
+                className="group relative px-8 py-4 rounded-2xl font-semibold text-white flex items-center gap-2 overflow-hidden hover:scale-[1.03] transition-transform duration-300 shadow-lg shadow-primary/30"
+                style={{ background: "linear-gradient(135deg, var(--glow-1), var(--glow-2))" }}
               >
-                <Mail className="w-5 h-5" />
-                Send Email
-                <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:translate-y-[-2px] transition-transform duration-300" />
+                <Mail className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">Send Email</span>
+                <ArrowUpRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 group-hover:translate-y-[-2px] transition-transform duration-300" />
+                <span className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent" />
               </Link>
 
               <ContactPopover />
             </div>
 
             {/* Social Links */}
-            <div className="flex justify-center gap-4 pt-8">
+            <div className="flex justify-center gap-4 pt-6">
               {[
                 { name: "GitHub", url: "https://github.com/mhsenam", icon: "gh" },
                 { name: "LinkedIn", url: "https://www.linkedin.com/in/mhsenam/", icon: "li" },
@@ -184,7 +228,7 @@ export default async function Home() {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 flex items-center justify-center rounded-full border border-border hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 hover:scale-110"
+                  className="w-12 h-12 flex items-center justify-center rounded-2xl glass hover:border-primary/50 hover:text-primary hover:-translate-y-1 transition-all duration-300"
                   aria-label={social.name}
                 >
                   {social.icon === "gh" && (
@@ -204,9 +248,12 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 border-t border-border/50">
-        <div className="container mx-auto max-w-7xl text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} Mohsen Amini. Built with Next.js, GSAP & lots of coffee.</p>
+      <footer className="py-10 px-4 border-t border-border/50">
+        <div className="container mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 text-muted-foreground text-sm">
+          <p>&copy; {new Date().getFullYear()} Mohsen Amini. All rights reserved.</p>
+          <p className="flex items-center gap-1.5">
+            Built with <span className="text-gradient font-semibold">Next.js</span> + <span className="text-gradient font-semibold">GSAP</span> & lots of coffee ☕
+          </p>
         </div>
       </footer>
     </>

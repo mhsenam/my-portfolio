@@ -289,10 +289,21 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50 supports-[backdrop-filter]:bg-background/50">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="text-lg font-semibold text-primary">
-          Mohsen Amini
+        <Link
+          href="/"
+          className="text-lg font-bold font-heading tracking-tight flex items-center gap-2 group"
+        >
+          <span
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary/25 group-hover:scale-110 transition-transform duration-300"
+            style={{
+              background: "linear-gradient(135deg, var(--glow-1), var(--glow-2))",
+            }}
+          >
+            M
+          </span>
+          <span className="text-gradient">Mohsen Amini</span>
         </Link>
 
         {/* Desktop Navigation (Hidden on smaller screens) */}
