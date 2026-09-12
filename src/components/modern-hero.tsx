@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mail, Github, Linkedin, Twitter, ArrowDown } from "lucide-react";
+import { Mail, Github, Linkedin, Twitter, ArrowDown, Terminal } from "lucide-react";
 import Link from "next/link";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -13,98 +13,132 @@ interface ModernHeroProps {
   avatarUrl?: string;
 }
 
-// Deterministic particle positions (fixed values to avoid hydration mismatch)
-const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
-  id: i,
-  left: (i * 5.26) % 100, // Fixed positions based on index
-  top: (i * 7.13) % 100,
-  duration: 5 + (i % 5) * 2, // Duration between 5-15s
-  delay: (i * 0.25) % 5, // Delay between 0-5s
-}));
+// Floating code snippets in the background (deterministic to avoid hydration mismatch)
+const FLOATING_SNIPPETS = [
+  { text: "const dev = new Human();", left: 6, top: 16, delay: 0, duration: 9 },
+  { text: "while(alive) { code(); }", left: 74, top: 12, delay: 1.5, duration: 11 },
+  { text: "git push --force # yolo", left: 10, top: 68, delay: 3, duration: 10 },
+  { text: "sudo rm -rf doubts/", left: 78, top: 62, delay: 2, duration: 12 },
+  { text: "0x1F600", left: 42, top: 8, delay: 4, duration: 9 },
+  { text: "// TODO: sleep", left: 85, top: 38, delay: 0.8, duration: 10 },
+  { text: "npm i success", left: 4, top: 42, delay: 2.6, duration: 11 },
+  { text: "() => {}", left: 60, top: 78, delay: 1.2, duration: 9 },
+];
+
+const TECH_STACK = [
+  "next.js", "react", "typescript", "ai/ml", "tailwind",
+  "node.js", "firebase", "gsap", "python", "git",
+];
+
+// Lines "typed" into the hero terminal
+type TermLine =
+  | { type: "cmd"; text: string }
+  | { type: "out"; html: string };
+
+const TERM_LINES: TermLine[] = [
+  { type: "cmd", text: "whoami" },
+  { type: "out", html: "<span class='tok-ok font-semibold'>mohsen-amini</span> — AI specialist &amp; web developer" },
+  { type: "cmd", text: "cat skills.json | jq '.top'" },
+  {
+    type: "out",
+    html: "[<span class='tok-str'>\"AI\"</span>, <span class='tok-str'>\"Next.js\"</span>, <span class='tok-str'>\"TypeScript\"</span>, <span class='tok-str'>\"UI/UX\"</span>]",
+  },
+  { type: "cmd", text: "systemctl status mohsen.service" },
+  {
+    type: "out",
+    html: "<span class='tok-ok'>●</span> active <span class='tok-ok'>(running)</span> — accepting new projects",
+  },
+];
 
 export function ModernHero({ avatarUrl }: ModernHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const avatarRef = useRef<HTMLDivElement>(null);
-  const socialRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const termRef = useRef<HTMLDivElement>(null);
+  const marqueeRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Terminal typing state
+  const [typedLines, setTypedLines] = useState<TermLine[]>([]);
+  const [currentCmd, setCurrentCmd] = useState("");
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Typewriter effect for the terminal
+  useEffect(() => {
+    if (!isMounted) return;
+
+    let lineIdx = 0;
+    let charIdx = 0;
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const schedule = (fn: () => void, ms: number) => {
+      const t = setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms);
+      timeouts.push(t);
+    };
+
+    const typeNext = () => {
+      if (lineIdx >= TERM_LINES.length) return;
+      const line = TERM_LINES[lineIdx];
+
+      if (line.type === "cmd") {
+        if (charIdx <= line.text.length) {
+          setCurrentCmd(line.text.slice(0, charIdx));
+          charIdx++;
+          schedule(typeNext, 38 + Math.random() * 45);
+        } else {
+          // Commit the command line
+          setTypedLines((prev) => [...prev, line]);
+          setCurrentCmd("");
+          lineIdx++;
+          charIdx = 0;
+          schedule(typeNext, 220);
+        }
+      } else {
+        // Output appears instantly after a beat
+        setTypedLines((prev) => [...prev, line]);
+        lineIdx++;
+        schedule(typeNext, 420);
+      }
+    };
+
+    schedule(typeNext, 1200);
+
+    return () => {
+      cancelled = true;
+      timeouts.forEach(clearTimeout);
+    };
+  }, [isMounted]);
+
   useEffect(() => {
     if (!isMounted || !containerRef.current) return;
 
     const ctx = gsap.context(() => {
-      // Initial timeline for hero entrance
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      // Animate avatar from nothing
+      // Left column cascades in
       tl.fromTo(
-        avatarRef.current,
-        { scale: 0, rotation: -180, opacity: 0 },
-        { scale: 1, rotation: 0, opacity: 1, duration: 1.2, ease: "elastic.out(1, 0.5)" }
-      );
-
-      // Animate title with character split
-      if (titleRef.current) {
-        const titleText = "Mohsen Amini";
-        titleRef.current.innerHTML = "";
-
-        const chars = titleText.split("").map((char) => {
-          const span = document.createElement("span");
-          span.textContent = char === " " ? "\u00A0" : char;
-          span.className = "inline-block";
-          span.style.opacity = "0";
-          span.style.transform = "translateY(100%)";
-          titleRef.current?.appendChild(span);
-          return span;
-        });
-
-        tl.to(chars, {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          stagger: 0.03,
-          ease: "power2.out",
-        }, "-=0.6");
-      }
-
-      // Animate subtitle
-      tl.fromTo(
-        subtitleRef.current,
+        leftColRef.current?.children || [],
         { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8 },
-        "-=0.4"
+        { y: 0, opacity: 1, duration: 0.7, stagger: 0.12 }
       );
 
-      // Animate social icons
+      // Terminal window slides in
       tl.fromTo(
-        socialRef.current?.children || [],
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.4, stagger: 0.1 },
-        "-=0.4"
+        termRef.current,
+        { y: 40, opacity: 0, scale: 0.96 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.8 },
+        "-=0.5"
       );
 
-      // Animate CTA
-      tl.fromTo(
-        ctaRef.current,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6 },
-        "-=0.2"
-      );
-
-      // Animate scroll indicator
-      tl.fromTo(
-        scrollIndicatorRef.current,
-        { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6 },
-        "-=0.3"
-      );
+      tl.fromTo(marqueeRef.current, { opacity: 0 }, { opacity: 1, duration: 0.8 }, "-=0.3");
+      tl.fromTo(scrollIndicatorRef.current, { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "-=0.5");
 
       // Continuous scroll indicator bounce
       gsap.to(scrollIndicatorRef.current, {
@@ -115,9 +149,9 @@ export function ModernHero({ avatarUrl }: ModernHeroProps) {
         ease: "power1.inOut",
       });
 
-      // Parallax effect on scroll
-      gsap.to(avatarRef.current, {
-        y: -100,
+      // Parallax on scroll
+      gsap.to(termRef.current, {
+        y: -60,
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
@@ -126,10 +160,9 @@ export function ModernHero({ avatarUrl }: ModernHeroProps) {
         },
       });
 
-      // Text reveal parallax
-      gsap.to([titleRef.current, subtitleRef.current], {
-        y: -50,
-        opacity: 0.5,
+      gsap.to(leftColRef.current, {
+        y: -40,
+        opacity: 0.4,
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
@@ -137,15 +170,14 @@ export function ModernHero({ avatarUrl }: ModernHeroProps) {
           scrub: 1,
         },
       });
-
     }, containerRef);
 
     return () => ctx.revert();
   }, [isMounted]);
 
   const socialLinks = [
-    { icon: Linkedin, href: "https://www.linkedin.com/in/mhsenam/", label: "LinkedIn" },
     { icon: Github, href: "https://github.com/mhsenam", label: "GitHub" },
+    { icon: Linkedin, href: "https://www.linkedin.com/in/mhsenam/", label: "LinkedIn" },
     { icon: Twitter, href: "https://x.com/Mhsenam", label: "Twitter" },
   ];
 
@@ -154,125 +186,191 @@ export function ModernHero({ avatarUrl }: ModernHeroProps) {
       ref={containerRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-      </div>
+      {/* Dotted grid backdrop */}
+      <div className="absolute inset-0 bg-grid" aria-hidden="true" />
 
-      {/* Grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(120,119,198,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(120,119,198,0.03)_1px,transparent_1px)] bg-[size:100px_100px]" />
-
-      {/* Floating particles - with deterministic positions */}
+      {/* Floating code snippets */}
       {isMounted && (
-        <div className="particles absolute inset-0 pointer-events-none">
-          {PARTICLES.map((p) => (
-            <div
-              key={p.id}
-              className="particle absolute w-2 h-2 bg-primary/20 rounded-full"
+        <div className="absolute inset-0 pointer-events-none select-none hidden md:block" aria-hidden="true">
+          {FLOATING_SNIPPETS.map((s, i) => (
+            <span
+              key={i}
+              className="absolute font-mono text-xs text-muted-foreground/25"
               style={{
-                left: `${p.left}%`,
-                top: `${p.top}%`,
-                animation: `float ${p.duration}s ease-in-out infinite`,
-                animationDelay: `${p.delay}s`,
+                left: `${s.left}%`,
+                top: `${s.top}%`,
+                animation: `float ${s.duration}s ease-in-out infinite`,
+                animationDelay: `${s.delay}s`,
               }}
-            />
+            >
+              {s.text}
+            </span>
           ))}
         </div>
       )}
 
-      {/* Hero content */}
-      <div className="relative z-10 container mx-auto px-4 py-20 text-center">
-        {/* Avatar with animated glow */}
-        <div ref={avatarRef} className="relative inline-block mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse" />
-          <Avatar className="w-40 h-40 sm:w-52 sm:h-52 border-4 border-primary/50 shadow-2xl relative z-10">
-            <AvatarImage src={avatarUrl} alt="Mohsen Amini" className="object-cover" />
-            <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-primary to-purple-500 text-white">
-              MA
-            </AvatarFallback>
-          </Avatar>
-          {/* Orbiting ring */}
-          <div className="absolute inset-0 rounded-full border border-primary/30 animate-[spin_10s_linear_infinite]" style={{ transform: "scale(1.2)" }} />
-          <div className="absolute inset-0 rounded-full border border-dashed border-purple-500/30 animate-[spin_15s_linear_infinite_reverse]" style={{ transform: "scale(1.4)" }} />
-        </div>
+      {/* ── Hero content: two columns ── */}
+      <div className="relative z-10 container mx-auto px-4 pt-28 pb-32 max-w-6xl">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left: intro */}
+          <div ref={leftColRef} className="space-y-6 text-center lg:text-left">
+            {/* Status badge */}
+            <div className="flex justify-center lg:justify-start">
+              <span className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-md border border-border bg-card font-mono text-xs text-muted-foreground">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-[var(--syntax-green)] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--syntax-green)]" />
+                </span>
+                status: <span className="tok-ok">available_for_hire</span>
+              </span>
+            </div>
 
-        {/* Animated title */}
-        <h1
-          ref={titleRef}
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 font-heading"
-        >
-          {isMounted ? "" : "Mohsen Amini"}
-        </h1>
+            {/* Avatar + name row */}
+            <div className="flex items-center gap-5 justify-center lg:justify-start">
+              <div className="relative shrink-0">
+                <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-border shadow-xl rounded-2xl">
+                  <AvatarImage src={avatarUrl} alt="Mohsen Amini" className="object-cover" />
+                  <AvatarFallback className="text-2xl font-bold font-mono bg-secondary rounded-2xl">
+                    MA
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute -bottom-2 -right-2 w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center">
+                  <Terminal className="w-3.5 h-3.5 text-primary" />
+                </span>
+              </div>
+              <div className="text-left">
+                <p className="font-mono text-sm text-muted-foreground mb-1">
+                  <span className="tok-comment">{"// hello world, I'm"}</span>
+                </p>
+                <h1
+                  ref={titleRef}
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono tracking-tight"
+                >
+                  Mohsen<span className="text-primary">.</span>Amini
+                  <span className="text-primary animate-blink">_</span>
+                </h1>
+              </div>
+            </div>
 
-        {/* Subtitle with gradient text */}
-        <p
-          ref={subtitleRef}
-          className="text-xl sm:text-2xl md:text-3xl text-muted-foreground mb-8 max-w-3xl mx-auto"
-        >
-          <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
-            AI Specialist
-          </span>
-          {" "}&{" "}
-          <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent font-semibold">
-            Web Developer
-          </span>
-        </p>
+            {/* Typed signature line */}
+            <p className="font-mono text-base sm:text-lg text-muted-foreground">
+              <span className="tok-kw">const</span>{" "}
+              <span className="tok-fn">role</span> ={" "}
+              <span className="tok-str">&quot;AI Specialist&quot;</span>{" "}
+              <span className="tok-kw">|</span>{" "}
+              <span className="tok-str">&quot;Web Developer&quot;</span>;
+            </p>
 
-        <p className="text-lg text-muted-foreground/80 mb-12 max-w-2xl mx-auto">
-          Building the future with intelligent web experiences. I craft cutting-edge
-          solutions that blend artificial intelligence with modern design.
-        </p>
+            <p className="text-base sm:text-lg text-muted-foreground/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
+              I build intelligent web experiences — shipping AI-powered products
+              with clean code, strong typing, and an unhealthy number of terminal tabs.
+            </p>
 
-        {/* Social links with magnetic effect */}
-        <div ref={socialRef} className="flex justify-center gap-4 mb-12">
-          {socialLinks.map((link) => {
-            const Icon = link.icon;
-            return (
+            {/* CTAs — keycap style */}
+            <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
               <Link
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative"
+                href="#projects"
+                className="keycap group px-6 py-3 font-semibold text-sm inline-flex items-center gap-2 bg-primary text-primary-foreground border-primary/60 hover:border-primary"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 rounded-full blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
-                <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-card border border-border hover:border-primary/50 transition-colors duration-300">
-                  <Icon className="w-6 h-6 text-foreground group-hover:text-primary transition-colors duration-300" />
-                </div>
+                <span className="tok-comment text-primary-foreground/70">$</span> view --projects
+                <ArrowDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
               </Link>
-            );
-          })}
+              <Link
+                href="mailto:mohsenamini1081@gmail.com"
+                className="keycap px-6 py-3 font-semibold text-sm inline-flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4 text-primary" />
+                ping me
+              </Link>
+            </div>
+
+            {/* Social links */}
+            <div className="flex gap-3 justify-center lg:justify-start">
+              {socialLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.label}
+                    className="keycap w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-primary"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right: live terminal */}
+          <div ref={termRef} className="term font-mono text-sm opacity-0">
+            {/* Title bar */}
+            <div className="term-bar">
+              <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+              <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
+              <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+              <span className="ml-3">mohsen@portfolio: ~/intro — zsh</span>
+            </div>
+            {/* Terminal body */}
+            <div className="p-5 space-y-2 min-h-[290px] leading-relaxed">
+              {typedLines.map((line, i) =>
+                line.type === "cmd" ? (
+                  <p key={i}>
+                    <span className="tok-ok">➜</span>{" "}
+                    <span className="tok-fn">~</span>{" "}
+                    <span className="text-foreground">{line.text}</span>
+                  </p>
+                ) : (
+                  <p
+                    key={i}
+                    className="text-muted-foreground pl-5"
+                    dangerouslySetInnerHTML={{ __html: line.html }}
+                  />
+                )
+              )}
+              {/* Active line with blinking cursor */}
+              <p>
+                <span className="tok-ok">➜</span>{" "}
+                <span className="tok-fn">~</span>{" "}
+                <span className="text-foreground">{currentCmd}</span>
+                <span className="inline-block w-2.5 h-4 bg-primary/80 align-middle animate-blink ml-0.5" />
+              </p>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* CTA Buttons */}
-        <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link
-            href="#projects"
-            className="group relative px-8 py-4 bg-primary text-primary-foreground rounded-full font-semibold overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-primary/30 hover:scale-105"
-          >
-            <span className="relative z-10">View My Work</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </Link>
-
-          <Link
-            href="mailto:mohsenamini1081@gmail.com"
-            className="group px-8 py-4 border-2 border-primary text-primary rounded-full font-semibold hover:bg-primary/10 transition-all duration-300 hover:scale-105 flex items-center gap-2"
-          >
-            <Mail className="w-5 h-5" />
-            Get In Touch
-          </Link>
+      {/* ── Tech marquee strip ── */}
+      <div
+        ref={marqueeRef}
+        className="absolute bottom-20 left-0 right-0 overflow-hidden opacity-0 select-none"
+        style={{
+          maskImage: "linear-gradient(90deg, transparent, black 15%, black 85%, transparent)",
+          WebkitMaskImage: "linear-gradient(90deg, transparent, black 15%, black 85%, transparent)",
+        }}
+        aria-hidden="true"
+      >
+        <div className="flex w-max animate-marquee gap-8 py-3 font-mono text-sm text-muted-foreground/50">
+          {[...TECH_STACK, ...TECH_STACK].map((tech, i) => (
+            <span key={i} className="flex items-center gap-8">
+              <span>
+                <span className="text-primary/50">import</span> {tech}
+              </span>
+              <span className="text-muted-foreground/30">·</span>
+            </span>
+          ))}
         </div>
       </div>
 
       {/* Scroll indicator */}
       <div
         ref={scrollIndicatorRef}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground opacity-0"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-muted-foreground opacity-0 font-mono"
       >
-        <span className="text-sm">Scroll to explore</span>
-        <ArrowDown className="w-5 h-5" />
+        <span className="text-[10px] tracking-widest">scroll++</span>
+        <ArrowDown className="w-4 h-4" />
       </div>
     </div>
   );

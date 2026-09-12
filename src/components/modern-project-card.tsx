@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import Link from "next/link";
-import { ExternalLink, Github } from "lucide-react";
+import { ExternalLink, Github, FileCode2 } from "lucide-react";
 
 export interface ProjectInfo {
   title: string;
@@ -19,75 +19,72 @@ interface ModernProjectCardProps {
   index: number;
 }
 
+// Turn "Pet Mate" into "pet-mate.tsx"
+function toFileName(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".tsx";
+}
+
 export function ModernProjectCard({ project, index }: ModernProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const skillsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const card = cardRef.current;
-    if (!card) return;
+    const inner = innerRef.current;
+    if (!card || !inner) return;
 
     // Entrance animation with stagger
     gsap.fromTo(card,
-      { y: 100, opacity: 0, rotateX: 15 },
+      { y: 80, opacity: 0 },
       {
         y: 0,
         opacity: 1,
-        rotateX: 0,
-        duration: 0.8,
-        delay: index * 0.1,
+        duration: 0.9,
+        delay: index * 0.12,
         ease: "power3.out",
         scrollTrigger: {
           trigger: card,
-          start: "top 85%",
+          start: "top 88%",
           toggleActions: "play none none reverse",
         },
       }
     );
 
-    // 3D tilt effect on mouse move
+    // Subtle 3D tilt
     const handleMouseMove = (e: MouseEvent) => {
       const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-      const rotateX = (y - centerY) / 10;
-      const rotateY = (centerX - x) / 10;
+      const rotateX = (y - centerY) / 24;
+      const rotateY = (centerX - x) / 24;
 
-      gsap.to(card, {
+      gsap.to(inner, {
         rotateX,
         rotateY,
         transformPerspective: 1000,
-        duration: 0.3,
+        duration: 0.35,
         ease: "power2.out",
       });
 
-      // Image parallax inside card
       gsap.to(imageRef.current, {
-        x: (centerX - x) / 20,
-        y: (centerY - y) / 20,
-        duration: 0.3,
+        x: (centerX - x) / 30,
+        y: (centerY - y) / 30,
+        duration: 0.35,
         ease: "power2.out",
       });
     };
 
     const handleMouseLeave = () => {
-      gsap.to(card, {
+      gsap.to(inner, {
         rotateX: 0,
         rotateY: 0,
-        duration: 0.5,
+        duration: 0.6,
         ease: "elastic.out(1, 0.5)",
       });
-      gsap.to(imageRef.current, {
-        x: 0,
-        y: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      });
+      gsap.to(imageRef.current, { x: 0, y: 0, duration: 0.5, ease: "power2.out" });
     };
 
     card.addEventListener("mousemove", handleMouseMove);
@@ -100,74 +97,79 @@ export function ModernProjectCard({ project, index }: ModernProjectCardProps) {
   }, [index]);
 
   return (
-    <div
-      ref={cardRef}
-      className="group relative h-full"
-      style={{ transformStyle: "preserve-3d" }}
-    >
-      <div className="relative h-full rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-primary/50 transition-colors duration-300 shadow-lg hover:shadow-2xl hover:shadow-primary/20">
-        {/* Image container with parallax */}
-        <div
-          ref={imageRef}
-          className="relative h-48 overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 z-10" />
+    <div ref={cardRef} className="group relative h-full" style={{ perspective: 1000 }}>
+      <div
+        ref={innerRef}
+        className="term relative h-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/40 group-hover:border-primary/40"
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {/* Editor tab bar */}
+        <div className="term-bar justify-between">
+          <span className="flex items-center gap-2 px-2.5 py-1 -my-1 rounded-t-md bg-background/60 border border-b-0 border-border text-foreground/90">
+            <FileCode2 className="w-3.5 h-3.5 text-primary" />
+            {toFileName(project.title)}
+            <span className="text-muted-foreground/50 ml-1">●</span>
+          </span>
+          <span className="hidden sm:inline text-muted-foreground/50">UTF-8</span>
+        </div>
+
+        {/* Image "preview pane" with parallax */}
+        <div ref={imageRef} className="relative h-44 overflow-hidden border-b border-border">
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
           <img
             src={project.image}
             alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {/* Overlay with links */}
-          <div className="absolute inset-0 z-20 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 backdrop-blur-sm">
+          <div className="absolute inset-0 z-20 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 backdrop-blur-[2px]">
             <Link
               href={project.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:scale-110 transition-transform duration-300"
+              aria-label={`Visit ${project.title}`}
+              className="keycap px-4 py-2.5 text-xs font-semibold inline-flex items-center gap-2 bg-primary text-primary-foreground border-primary/60"
             >
-              <ExternalLink className="w-5 h-5" />
+              <ExternalLink className="w-4 h-4" />
+              npm run demo
             </Link>
             {project.github && (
               <Link
                 href={project.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-card text-foreground hover:scale-110 transition-transform duration-300"
+                aria-label={`${project.title} on GitHub`}
+                className="keycap w-10 h-10 flex items-center justify-center text-foreground"
               >
-                <Github className="w-5 h-5" />
+                <Github className="w-4 h-4" />
               </Link>
             )}
           </div>
         </div>
 
-        {/* Content */}
-        <div ref={contentRef} className="p-6">
-          <h3
-            ref={titleRef}
-            className="text-xl font-bold mb-3 font-heading group-hover:text-primary transition-colors duration-300"
-          >
-            {project.title}
+        {/* Content — code style */}
+        <div className="p-5 font-mono">
+          <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors duration-300">
+            <span className="tok-kw">export</span>{" "}
+            <span className="text-foreground">{project.title.replace(/\s+/g, "")}</span>
           </h3>
 
-          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+          <p className="text-muted-foreground text-[13px] mb-4 line-clamp-2 leading-relaxed font-sans">
             {project.description[0]}
           </p>
 
-          {/* Skills tags */}
-          <div ref={skillsRef} className="flex flex-wrap gap-2">
+          {/* Skills as imports */}
+          <div className="flex flex-wrap gap-1.5">
             {project.skills.map((skill) => (
               <span
                 key={skill}
-                className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
+                className="px-2 py-0.5 text-[11px] rounded border border-border bg-secondary/60 text-muted-foreground hover:text-primary hover:border-primary/40 transition-colors duration-300"
               >
                 {skill}
               </span>
             ))}
           </div>
         </div>
-
-        {/* Animated border gradient */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-md" />
       </div>
     </div>
   );

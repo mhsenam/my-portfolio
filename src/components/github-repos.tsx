@@ -1,11 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import Link from "next/link";
 import { Star, GitFork, ExternalLink } from "lucide-react";
 
@@ -120,9 +112,6 @@ export async function GitHubRepos({ username }: { username: string }) {
   if (!repos || repos.length === 0) {
     return (
       <section className="text-center py-12">
-        <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
-          My GitHub Projects
-        </h2>
         <p className="text-muted-foreground">
           Could not fetch repositories or none found.
         </p>
@@ -131,64 +120,69 @@ export async function GitHubRepos({ username }: { username: string }) {
   }
 
   return (
-    <section className="py-12">
-      <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-8">
-        My Latest GitHub Projects
-      </h2>
+    <section>
+      {/* Fake command header */}
+      <p className="font-mono text-sm text-muted-foreground mb-6 text-center">
+        <span className="tok-ok">➜</span> <span className="tok-fn">~</span> gh repo list {username} --sort updated --limit 3
+      </p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {repos.map((repo) => (
-          <Card
+          <Link
             key={repo.id}
-            className="group relative overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow
-                       before:absolute before:inset-0 before:-translate-x-full 
-                       group-hover:before:animate-[shimmer_1.5s_ease-out] /* Animate only on hover */
-                       before:bg-gradient-to-r before:from-transparent before:via-primary/10 before:to-transparent"
+            href={repo.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="term group relative flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-2xl hover:shadow-black/40"
           >
-            <CardHeader>
-              <CardTitle className="text-xl flex justify-between items-center">
+            {/* Terminal bar as header */}
+            <div className="term-bar justify-between">
+              <span className="truncate text-foreground/80">
+                <span className="tok-ok">{username}</span>
+                <span className="text-muted-foreground/60">/</span>
                 {repo.name}
-                <Link
-                  href={repo.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="View on GitHub"
-                >
-                  <ExternalLink className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-                </Link>
-              </CardTitle>
-              {/* Use readmeSummary first, then description, then fallback */}
-              <CardDescription className="h-16 text-sm overflow-hidden text-ellipsis">
+              </span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+            </div>
+
+            <div className="p-5 flex flex-col flex-1">
+              <p className="font-mono text-xs text-muted-foreground/60 mb-2">
+                <span className="tok-comment">{"/** README.md */"}</span>
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-6 flex-1">
                 {repo.readmeSummary ||
                   repo.description ||
                   "No description available."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {repo.language && (
-                <p className="text-sm text-muted-foreground mb-2">
-                  Language: {repo.language}
-                </p>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-start space-x-4 text-sm text-muted-foreground">
-              <div className="flex items-center">
-                <Star className="h-4 w-4 mr-1" /> {repo.stargazers_count}
+              </p>
+
+              {/* Footer meta — git style */}
+              <div className="flex items-center gap-4 font-mono text-xs text-muted-foreground pt-4 border-t border-border/60">
+                {repo.language && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                    {repo.language}
+                  </span>
+                )}
+                <span className="flex items-center gap-1 ml-auto">
+                  <Star className="h-3.5 w-3.5" /> {repo.stargazers_count}
+                </span>
+                <span className="flex items-center gap-1">
+                  <GitFork className="h-3.5 w-3.5" /> {repo.forks_count}
+                </span>
               </div>
-              <div className="flex items-center">
-                <GitFork className="h-4 w-4 mr-1" /> {repo.forks_count}
-              </div>
-            </CardFooter>
-          </Card>
+            </div>
+          </Link>
         ))}
       </div>
-      <div className="text-center mt-8">
+      <div className="text-center mt-12">
         <Link
           href={`https://github.com/${username}?tab=repositories`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
+          className="keycap inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold hover:text-primary"
         >
-          View All Repositories on GitHub
+          <span className="tok-comment">$</span> gh repo list --all
+          <ExternalLink className="w-4 h-4" />
         </Link>
       </div>
     </section>

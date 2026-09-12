@@ -145,7 +145,7 @@ export function CreatePostDialog({ onPostCreated }: CreatePostDialogProps) {
           size="lg"
           className="
             px-6 py-3 text-base font-semibold text-white rounded-lg shadow-lg 
-            bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 
+            bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 
             hover:scale-105 hover:shadow-xl hover:brightness-110 
             active:scale-100 active:brightness-100 
             transition-all duration-300 ease-in-out

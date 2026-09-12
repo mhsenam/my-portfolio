@@ -1,21 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins, Lato } from "next/font/google";
+import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
 import ScrollProgressBar from "@/components/scroll-progress-bar";
 import Head from "next/head";
 
-const poppins = Poppins({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-code",
 });
 
-const lato = Lato({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-lato",
+  variable: "--font-body",
 });
 
 export const viewport: Viewport = {
@@ -145,7 +144,7 @@ export default function RootLayout({
           }}
         />
       </Head>
-      <body className={`${poppins.variable} ${lato.variable} font-sans noise`}>
+      <body className={`${jetbrainsMono.variable} ${inter.variable} font-sans noise`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

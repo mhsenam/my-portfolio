@@ -289,10 +289,19 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/60 supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="text-lg font-semibold text-primary">
-          Mohsen Amini
+        <Link
+          href="/"
+          className="font-mono text-sm sm:text-base font-bold tracking-tight flex items-center gap-2.5 group"
+        >
+          <span className="w-8 h-8 rounded-md flex items-center justify-center bg-primary text-primary-foreground text-sm font-bold border border-primary/50 group-hover:scale-110 transition-transform duration-300">
+            {">_"}
+          </span>
+          <span className="text-foreground">
+            <span className="text-primary">~/</span>mhsenam
+            <span className="text-primary animate-blink">_</span>
+          </span>
         </Link>
 
         {/* Desktop Navigation (Hidden on smaller screens) */}
