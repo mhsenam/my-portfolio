@@ -1,6 +1,5 @@
 import { ModernHero } from "@/components/modern-hero";
 import { ModernProjectCard, ProjectInfo } from "@/components/modern-project-card";
-import { CustomCursor } from "@/components/custom-cursor";
 import { ContactPopover } from "@/components/contact-popover";
 import { GitHubRepos } from "@/components/github-repos";
 import { Mail, ArrowUpRight, Braces, Cpu, GitBranch, Coffee, Bug, Zap } from "lucide-react";
@@ -50,8 +49,6 @@ export default async function Home() {
 
   return (
     <>
-      <CustomCursor />
-
       {/* Hero Section */}
       <ModernHero avatarUrl={avatarUrl} />
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
 import ScrollProgressBar from "@/components/scroll-progress-bar";
+import { CustomCursor } from "@/components/custom-cursor";
 import Head from "next/head";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -154,6 +155,10 @@ export default function RootLayout({
           <Navbar />
           <ScrollProgressBar />
           <main className="relative z-10">{children}</main>
+          {/* Mounted in the root layout (not per-page) so the cursor exists on
+              every route and doesn't wait for a page's data to render. It hides
+              the native cursor only once it is actually tracking the pointer. */}
+          <CustomCursor />
         </ThemeProvider>
       </body>
     </html>
