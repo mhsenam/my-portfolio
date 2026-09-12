@@ -4,7 +4,7 @@ import { ContactPopover } from "@/components/contact-popover";
 import { GitHubRepos } from "@/components/github-repos";
 import { Mail, ArrowUpRight, Braces, Cpu, GitBranch, Coffee, Bug, Zap } from "lucide-react";
 import Link from "next/link";
-import { getProfilePhoto } from "@/lib/linkedin";
+import { getProfilePhoto, GITHUB_USERNAME } from "@/lib/github-profile";
 
 // Make component async
 export default async function Home() {
@@ -160,7 +160,7 @@ export default async function Home() {
               git log <span className="text-primary">--recent</span>
             </h2>
           </div>
-          <GitHubRepos username="mhsenam" />
+          <GitHubRepos username={GITHUB_USERNAME} />
         </div>
       </section>
 
