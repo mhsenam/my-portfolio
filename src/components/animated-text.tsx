@@ -43,12 +43,12 @@ const hoverEffect = {
 
 const colors = [
   "text-primary",
-  "text-red-500",
-  "text-blue-500",
+  "text-emerald-500",
   "text-green-500",
-  "text-yellow-500",
-  "text-purple-500",
-  "text-pink-500",
+  "text-teal-500",
+  "text-lime-500",
+  "text-emerald-400",
+  "text-green-400",
 ];
 
 export const AnimatedText = ({

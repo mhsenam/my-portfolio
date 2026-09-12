@@ -42,6 +42,7 @@
   --color-syntax-green: var(--syntax-green);
   --color-syntax-blue: var(--syntax-blue);
   --color-syntax-purple: var(--syntax-purple);
+  --color-syntax-teal: var(--syntax-teal);
   --color-syntax-orange: var(--syntax-orange);
   --color-syntax-red: var(--syntax-red);
   --color-syntax-yellow: var(--syntax-yellow);
@@ -77,20 +78,21 @@
   --ring: oklch(0.72 0.19 148 / 60%);
   --chart-1: oklch(0.72 0.19 148);
   --chart-2: oklch(0.78 0.11 245);
-  --chart-3: oklch(0.78 0.13 305);
+  --chart-3: oklch(0.8 0.13 175);
   --chart-4: oklch(0.79 0.14 60);
   --chart-5: oklch(0.7 0.18 25);
-  /* Syntax highlight colors (One-Dark / GitHub-dark hybrid) */
+  /* Syntax highlight colors (green-forward terminal palette) */
   --syntax-green: oklch(0.75 0.17 148);
+  --syntax-teal: oklch(0.8 0.13 175);
   --syntax-blue: oklch(0.78 0.11 245);
-  --syntax-purple: oklch(0.78 0.13 305);
+  --syntax-purple: var(--syntax-teal); /* remapped: purple retired for green/teal */
   --syntax-orange: oklch(0.79 0.14 60);
   --syntax-red: oklch(0.72 0.17 25);
   --syntax-yellow: oklch(0.85 0.12 95);
   /* Kept for compatibility with shared components */
   --glow-1: var(--syntax-green);
-  --glow-2: var(--syntax-blue);
-  --glow-3: var(--syntax-purple);
+  --glow-2: var(--syntax-teal);
+  --glow-3: var(--syntax-blue);
 }
 
 .light {
@@ -114,14 +116,15 @@
   --input: oklch(0.2 0.015 255 / 14%);
   --ring: oklch(0.55 0.17 148 / 50%);
   --syntax-green: oklch(0.55 0.17 148);
+  --syntax-teal: oklch(0.58 0.12 175);
   --syntax-blue: oklch(0.55 0.15 245);
-  --syntax-purple: oklch(0.55 0.18 305);
+  --syntax-purple: var(--syntax-teal); /* remapped: purple retired for green/teal */
   --syntax-orange: oklch(0.6 0.15 60);
   --syntax-red: oklch(0.55 0.2 25);
   --syntax-yellow: oklch(0.65 0.13 95);
   --glow-1: var(--syntax-green);
-  --glow-2: var(--syntax-blue);
-  --glow-3: var(--syntax-purple);
+  --glow-2: var(--syntax-teal);
+  --glow-3: var(--syntax-blue);
 }
 
 @layer base {
