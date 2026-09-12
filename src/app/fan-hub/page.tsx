@@ -230,14 +230,14 @@ export default function FanHubPage() {
 
         {/* --- Retro Banner --- */}
         <div className="relative w-full aspect-[4/1] mb-8 overflow-hidden rounded-lg shadow-lg">
-          <Image
-            src="/fan-hub-banner.jpg"
-            alt="Fan Hub Retro Banner"
-            layout="fill"
-            objectFit="cover"
-            unoptimized={true}
-            priority
-          />
+            <Image
+              src="/fan-hub-banner.jpg"
+              alt="Fan Hub Retro Banner"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
         </div>
 
         <Separator className="mb-8 border-dashed border-muted-foreground/50" />

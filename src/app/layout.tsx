@@ -5,7 +5,6 @@ import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
 import ScrollProgressBar from "@/components/scroll-progress-bar";
 import { CustomCursor } from "@/components/custom-cursor";
-import Head from "next/head";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -23,7 +22,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mohsen Amini - AI Specialist & Web Developer | mhsenam",
+  metadataBase: new URL("https://mhsenam.com"),
+  title: {
+    default: "Mohsen Amini - AI Specialist & Web Developer | mhsenam",
+    template: "%s | Mohsen Amini",
+  },
   description:
     "Official portfolio of Mohsen Amini (mhsenam): AI Specialist, Web Developer, and innovator. Explore projects, articles, and contact info. Expert in Next.js, React, and AI integration.",
   keywords: [
@@ -70,9 +73,6 @@ export const metadata: Metadata = {
     creator: "@mhsenam",
     images: ["/fan-hub-banner.jpg"],
   },
-  alternates: {
-    canonical: "https://mhsenam.com/",
-  },
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
@@ -101,12 +101,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <Head>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="manifest" href="/site.webmanifest" />
 
+      <body className={`${jetbrainsMono.variable} ${inter.variable} font-sans noise`}>
+        {/* Rendered as plain JSX: React hoists these into <head> during SSR.
+            (They used to live in next/head, whose contents never made it into
+            the App Router HTML output — the JSON-LD was silently missing.) */}
+        <link rel="preconnect" href="https://avatars.githubusercontent.com" />
+        <link rel="preconnect" href="https://firestore.googleapis.com" />
+        <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -144,8 +146,6 @@ export default function RootLayout({
             }),
           }}
         />
-      </Head>
-      <body className={`${jetbrainsMono.variable} ${inter.variable} font-sans noise`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

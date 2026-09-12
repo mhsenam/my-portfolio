@@ -2,12 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { ExternalLink, Github, FileCode2 } from "lucide-react";
 
 export interface ProjectInfo {
   title: string;
-  image: string;
+  image: StaticImageData;
   description: string[];
   link: string;
   github?: string;
@@ -116,10 +117,12 @@ export function ModernProjectCard({ project, index }: ModernProjectCardProps) {
         {/* Image "preview pane" with parallax */}
         <div ref={imageRef} className="relative h-44 overflow-hidden border-b border-border">
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
-          <img
+          <Image
             src={project.image}
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            alt={`${project.title} screenshot`}
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
           {/* Overlay with links */}
           <div className="absolute inset-0 z-20 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 backdrop-blur-[2px]">

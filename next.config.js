@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
+  // The Arena live preview serves the dev server under *.e2b.app.
+  allowedDevOrigins: ['e2b.app'],
   images: {
     // Keep existing remotePatterns if any, or use domains
     // Using remotePatterns is generally preferred for more control

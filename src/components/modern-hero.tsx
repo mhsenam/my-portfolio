@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { fetchCurrentGitHubAvatar } from "@/lib/github-profile";
 import { Mail, Github, Linkedin, Twitter, ArrowDown, Terminal } from "lucide-react";
 import Link from "next/link";
 
@@ -51,6 +52,9 @@ const TERM_LINES: TermLine[] = [
 ];
 
 export function ModernHero({ avatarUrl }: ModernHeroProps) {
+  // The server seeds this from a (1h cached) API lookup; this per-visit check
+  // swaps in a newer avatar immediately if it changed inside that window.
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
@@ -66,6 +70,17 @@ export function ModernHero({ avatarUrl }: ModernHeroProps) {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    setCurrentAvatarUrl(avatarUrl);
+    let cancelled = false;
+    fetchCurrentGitHubAvatar().then((url) => {
+      if (!cancelled && url) setCurrentAvatarUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarUrl]);
 
   // Typewriter effect for the terminal
   useEffect(() => {
@@ -229,7 +244,7 @@ export function ModernHero({ avatarUrl }: ModernHeroProps) {
             <div className="flex items-center gap-5 justify-center lg:justify-start">
               <div className="relative shrink-0">
                 <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-border shadow-xl rounded-2xl">
-                  <AvatarImage src={avatarUrl} alt="Mohsen Amini" className="object-cover" />
+                  <AvatarImage src={currentAvatarUrl} alt="Mohsen Amini" className="object-cover" />
                   <AvatarFallback className="text-2xl font-bold font-mono bg-secondary rounded-2xl">
                     MA
                   </AvatarFallback>

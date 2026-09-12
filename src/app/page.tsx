@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import type { Metadata } from "next";
 import { ModernHero } from "@/components/modern-hero";
 import { ModernProjectCard, ProjectInfo } from "@/components/modern-project-card";
 import { ContactPopover } from "@/components/contact-popover";
@@ -5,6 +7,13 @@ import { GitHubRepos } from "@/components/github-repos";
 import { Mail, ArrowUpRight, Braces, Cpu, GitBranch, Coffee, Bug, Zap } from "lucide-react";
 import Link from "next/link";
 import { getProfilePhoto, GITHUB_USERNAME } from "@/lib/github-profile";
+import petmateImg from "@/assets/petmate.webp";
+import meetifyImg from "@/assets/meetify.webp";
+import ylImg from "@/assets/yl.webp";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://mhsenam.com/" },
+};
 
 // Make component async
 export default async function Home() {
@@ -15,7 +24,7 @@ export default async function Home() {
   const projects: ProjectInfo[] = [
     {
       title: "Pet Mate",
-      image: "/project_icons/petmate.png",
+      image: petmateImg,
       description: ["Pet Mate is a platform for pet owners to find and connect with other pet lovers in their area."],
       link: "http://petmate.ir/",
       github: "https://github.com/mhsenam",
@@ -23,7 +32,7 @@ export default async function Home() {
     },
     {
       title: "Meetify",
-      image: "/project_icons/meetify.png",
+      image: meetifyImg,
       description: ["Meetify is a platform for creating and joining events with friends and communities."],
       link: "https://meetify.mhsenam.ir/",
       github: "https://github.com/mhsenam",
@@ -31,7 +40,7 @@ export default async function Home() {
     },
     {
       title: "YouTube Downloader",
-      image: "/project_icons/yl.png",
+      image: ylImg,
       description: ["A powerful tool for downloading YouTube videos in multiple formats and qualities."],
       link: "https://dl.mhsenam.ir",
       skills: ["HTML", "CSS", "JavaScript"],
@@ -160,7 +169,11 @@ export default async function Home() {
               git log <span className="text-primary">--recent</span>
             </h2>
           </div>
-          <GitHubRepos username={GITHUB_USERNAME} />
+          {/* Streams in after the rest of the page: the GitHub API round-trip
+              no longer blocks the HTML from being sent. */}
+          <Suspense fallback={<ReposSkeleton />}>
+            <GitHubRepos username={GITHUB_USERNAME} />
+          </Suspense>
         </div>
       </section>
 
@@ -257,5 +270,24 @@ export default async function Home() {
         </div>
       </footer>
     </>
+  );
+}
+
+/** Placeholder streamed while the GitHub API round-trip resolves. */
+function ReposSkeleton() {
+  return (
+    <div className="grid gap-5 md:grid-cols-3" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="term p-5">
+          <div className="h-4 w-2/3 rounded bg-muted animate-pulse" />
+          <div className="mt-3 h-3 w-full rounded bg-muted/60 animate-pulse" />
+          <div className="mt-2 h-3 w-5/6 rounded bg-muted/60 animate-pulse" />
+          <div className="mt-5 flex gap-2">
+            <div className="h-5 w-16 rounded-full bg-muted/60 animate-pulse" />
+            <div className="h-5 w-12 rounded-full bg-muted/60 animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
