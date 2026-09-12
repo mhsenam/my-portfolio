@@ -2,13 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "firebase/auth";
-import { auth } from "../../lib/firebaseConfig"; // Corrected path
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,19 +15,33 @@ import {
 } from "@/components/ui/card";
 import { Icons } from "@/components/icons"; // Assuming you have an icons component
 
+// The auth SDK (~130 kB of the route's initial JS) is only needed when a
+// form is submitted, so it is imported on demand instead of at module eval.
+type AuthBundle = typeof import("firebase/auth") & {
+  auth: import("firebase/auth").Auth;
+};
+let authPromise: Promise<AuthBundle> | null = null;
+function loadAuth(): Promise<AuthBundle> {
+  authPromise ??= Promise.all([
+    import("../../lib/firebaseConfig"),
+    import("firebase/auth"),
+  ]).then(([{ auth }, fa]) => ({ auth, ...fa }));
+  return authPromise;
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const googleProvider = new GoogleAuthProvider();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     try {
+      const { auth, signInWithEmailAndPassword } = await loadAuth();
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/fan-hub"); // Redirect to fan hub after successful login
     } catch (err: unknown) {
@@ -54,6 +61,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
+      const { auth, createUserWithEmailAndPassword } = await loadAuth();
       await createUserWithEmailAndPassword(auth, email, password);
       router.push("/fan-hub"); // Redirect to fan hub after successful sign up
     } catch (err: unknown) {
@@ -72,7 +80,8 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const { auth, GoogleAuthProvider, signInWithPopup } = await loadAuth();
+      await signInWithPopup(auth, new GoogleAuthProvider());
       router.push("/fan-hub"); // Redirect to fan hub after successful Google sign-in
     } catch (err: unknown) {
       if (err instanceof Error) {

@@ -2,20 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthState } from "react-firebase-hooks/auth";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-} from "firebase/firestore";
-import { auth, db } from "../../lib/firebaseConfig";
-import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { useLazyAuthState } from "@/hooks/use-lazy-auth";
+import type { Firestore } from "firebase/firestore";
 import { Separator } from "@/components/ui/separator";
-import { CreatePostDialog } from "@/components/create-post-dialog";
-import { PostCard, Post } from "@/components/post-card";
+import type { Post } from "@/components/post-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
@@ -43,8 +34,33 @@ const PostSkeleton = () => (
   </div>
 );
 
+// Firestore and these two components are only exercised after the client
+// fetch / on interaction, so they live in on-demand chunks, not the route's
+// initial JS.
+const PostCard = dynamic(
+  () => import("@/components/post-card").then((m) => m.PostCard),
+  { ssr: false }
+);
+const CreatePostDialog = dynamic(
+  () =>
+    import("@/components/create-post-dialog").then((m) => m.CreatePostDialog),
+  { ssr: false }
+);
+
+type FirestoreBundle = typeof import("firebase/firestore") & {
+  db: Firestore;
+};
+let firestorePromise: Promise<FirestoreBundle> | null = null;
+function loadFirestore(): Promise<FirestoreBundle> {
+  firestorePromise ??= Promise.all([
+    import("../../lib/firebaseConfig"),
+    import("firebase/firestore"),
+  ]).then(([{ db }, fs]) => ({ db, ...fs }));
+  return firestorePromise;
+}
+
 export default function FanHubPage() {
-  const [user, authLoading, authError] = useAuthState(auth);
+  const [user, authLoading, authError] = useLazyAuthState();
   const router = useRouter();
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [explorePosts, setExplorePosts] = useState<Post[]>([]);
@@ -54,6 +70,9 @@ export default function FanHubPage() {
 
   // Fetching Logic
   const fetchPosts = useCallback(async () => {
+    const { db, collection, query, where, orderBy, limit, getDocs } =
+      await loadFirestore();
+
     // Fetch explore posts first (everyone sees these)
     setExplorePostsLoading(true);
     try {
@@ -203,18 +222,8 @@ export default function FanHubPage() {
   // If we reach here: authLoading is false, authError is null, user exists.
   // Render the main Fan Hub content.
   return (
-    <motion.div
-      className="container mx-auto px-4 pt-24 pb-12 min-h-screen flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="flex-grow"
-      >
+    <div className="container mx-auto px-4 pt-24 pb-12 min-h-screen flex flex-col animate-in fade-in duration-500">
+      <div className="flex-grow animate-in fade-in slide-in-from-bottom-5 duration-500 [animation-delay:0.2s]">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
@@ -338,7 +347,7 @@ export default function FanHubPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

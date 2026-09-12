@@ -14,6 +14,7 @@ import type { User } from "firebase/auth";
 export function useLazyAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,13 +23,19 @@ export function useLazyAuthState() {
     void Promise.all([
       import("@/lib/firebaseConfig"),
       import("firebase/auth"),
-    ]).then(([{ auth }, { onAuthStateChanged }]) => {
-      if (cancelled) return;
-      unsubscribe = onAuthStateChanged(auth, (next) => {
-        setUser(next);
+    ])
+      .then(([{ auth }, { onAuthStateChanged }]) => {
+        if (cancelled) return;
+        unsubscribe = onAuthStateChanged(auth, (next) => {
+          setUser(next);
+          setLoading(false);
+        });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err : new Error(String(err)));
         setLoading(false);
       });
-    });
 
     return () => {
       cancelled = true;
@@ -36,5 +43,5 @@ export function useLazyAuthState() {
     };
   }, []);
 
-  return [user, loading] as const;
+  return [user, loading, error] as const;
 }

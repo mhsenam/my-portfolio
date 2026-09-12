@@ -8,7 +8,7 @@ import { CustomCursor } from "@/components/custom-cursor";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-code",
 });
 

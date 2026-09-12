@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ModernHero } from "@/components/modern-hero";
 import { ModernProjectCard, ProjectInfo } from "@/components/modern-project-card";
-import { ContactPopover } from "@/components/contact-popover";
+import { LazyContactPopover } from "@/components/lazy-contact-popover";
 import { GitHubRepos } from "@/components/github-repos";
 import { Mail, ArrowUpRight, Braces, Cpu, GitBranch, Coffee, Bug, Zap } from "lucide-react";
 import Link from "next/link";
@@ -211,7 +211,7 @@ export default async function Home() {
                   <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:translate-y-[-2px] transition-transform duration-300" />
                 </Link>
 
-                <ContactPopover />
+                <LazyContactPopover />
               </div>
 
               {/* Social Links */}
