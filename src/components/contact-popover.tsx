@@ -18,9 +18,9 @@ export function ContactPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="lg" className="text-lg mt-4 cursor-pointer">
-          Get In Touch
-        </Button>
+        <button className="keycap px-6 py-3.5 font-mono font-semibold text-sm cursor-pointer inline-flex items-center gap-2">
+          <span className="text-primary">$</span> chat --now
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2 bg-background/80 backdrop-blur-md border-border">
         <div className="flex flex-col space-y-2">

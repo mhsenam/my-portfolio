@@ -20,14 +20,13 @@ export default function ScrollProgressBar() {
   return (
     <div className="fixed top-16 left-0 w-full z-50 h-[3px] bg-transparent pointer-events-none">
       <div
-        className="h-full rounded-full"
+        className="h-full"
         style={{
           width: `${progress}%`,
-          background:
-            "linear-gradient(90deg, var(--glow-1), var(--glow-2), var(--glow-3))",
+          background: "var(--primary)",
           boxShadow:
             progress > 0
-              ? "0 0 12px 1px color-mix(in oklch, var(--glow-1) 60%, transparent)"
+              ? "0 0 8px 1px color-mix(in oklch, var(--primary) 50%, transparent)"
               : undefined,
           transition: "width 0.15s ease-out",
         }}

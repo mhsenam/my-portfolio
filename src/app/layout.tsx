@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./providers";
 import { Navbar } from "@/components/navbar";
 import ScrollProgressBar from "@/components/scroll-progress-bar";
 import Head from "next/head";
 
-const spaceGrotesk = Space_Grotesk({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-code",
 });
 
 const inter = Inter({
@@ -144,7 +144,7 @@ export default function RootLayout({
           }}
         />
       </Head>
-      <body className={`${spaceGrotesk.variable} ${inter.variable} font-sans noise`}>
+      <body className={`${jetbrainsMono.variable} ${inter.variable} font-sans noise`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
