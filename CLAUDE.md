@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a personal portfolio website for Mohsen Amini (mhsenam), built with Next.js 15, React 19, TypeScript, and Tailwind CSS. It features an animated hero section, project showcase, GitHub repository integration, and a community "Fan Hub" with Firebase authentication and Firestore.
+This is a personal portfolio website for Mohsen Amini (mhsenam), built with Next.js 15, React 19, TypeScript, and Tailwind CSS. It features an animated hero section, a projects section driven by the GitHub API (`#projects` renders the six most recently pushed repositories — there are no hard-coded project cards anymore), and a community "Fan Hub" with Firebase authentication and Firestore.
 
 ## Development Commands
 
@@ -51,9 +51,13 @@ src/
 │   ├── animated-text.tsx   # Character/word animation with scroll effects
 │   ├── animated-hero.tsx   # Hero section wrapper
 │   ├── animated-card.tsx   # Card entrance animations
-│   ├── project-card.tsx    # Project showcase cards
+│   ├── project-card.tsx    # Legacy project showcase card (unused)
+│   ├── modern-project-card.tsx # Animated card used by the old hard-coded
+│   │                       #   projects list (unused — the homepage now renders
+│   │                       #   live GitHub repos instead)
 │   ├── post-card.tsx       # Fan Hub post cards with like/delete
-│   ├── github-repos.tsx    # Async component fetching GitHub API
+│   ├── github-repos.tsx    # Async component fetching GitHub API (the homepage
+│   │                       #   "projects" section: 6 most recently pushed repos)
 │   └── create-post-dialog.tsx  # Post creation with image upload
 └── lib/
     ├── firebaseConfig.ts   # Firebase initialization

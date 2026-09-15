@@ -1,15 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ModernHero } from "@/components/modern-hero";
-import { ModernProjectCard, ProjectInfo } from "@/components/modern-project-card";
 import { LazyContactPopover } from "@/components/lazy-contact-popover";
 import { GitHubRepos } from "@/components/github-repos";
 import { Mail, ArrowUpRight, Braces, Cpu, GitBranch, Coffee, Bug, Zap } from "lucide-react";
 import Link from "next/link";
 import { getProfilePhoto, GITHUB_USERNAME } from "@/lib/github-profile";
-import petmateImg from "@/assets/petmate.webp";
-import meetifyImg from "@/assets/meetify.webp";
-import ylImg from "@/assets/yl.webp";
 
 export const metadata: Metadata = {
   alternates: { canonical: "https://mhsenam.com/" },
@@ -19,33 +15,6 @@ export const metadata: Metadata = {
 export default async function Home() {
   // Fetch profile photo
   const avatarUrl = await getProfilePhoto();
-
-  // Project data
-  const projects: ProjectInfo[] = [
-    {
-      title: "Pet Mate",
-      image: petmateImg,
-      description: ["Pet Mate is a platform for pet owners to find and connect with other pet lovers in their area."],
-      link: "http://petmate.ir/",
-      github: "https://github.com/mhsenam",
-      skills: ["React", "Next.js", "TypeScript", "Firebase", "TailwindCSS"],
-    },
-    {
-      title: "Meetify",
-      image: meetifyImg,
-      description: ["Meetify is a platform for creating and joining events with friends and communities."],
-      link: "https://meetify.mhsenam.ir/",
-      github: "https://github.com/mhsenam",
-      skills: ["React", "Next.js", "TypeScript", "Firebase", "TailwindCSS"],
-    },
-    {
-      title: "YouTube Downloader",
-      image: ylImg,
-      description: ["A powerful tool for downloading YouTube videos in multiple formats and qualities."],
-      link: "https://dl.mhsenam.ir",
-      skills: ["HTML", "CSS", "JavaScript"],
-    },
-  ];
 
   const stats = [
     { icon: Braces, label: "languages_spoken", value: "TS > JS > PY" },
@@ -126,7 +95,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Projects Section */}
+      {/* Projects Section — the six most recently updated GitHub repos */}
       <section id="projects" className="relative py-28 px-4">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-14">
@@ -135,40 +104,12 @@ export default async function Home() {
               ls <span className="text-primary">~/projects</span>
             </h2>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Things I&apos;ve shipped. AI, web apps, and creative problem-solving —
-              all compiled with zero warnings (mostly).
+              My six most recent repositories, pulled straight from the GitHub API.
+              AI, web apps, and creative problem-solving — whatever I pushed last is
+              what shows up here.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, i) => (
-              <ModernProjectCard key={i} project={project} index={i} />
-            ))}
-          </div>
-
-          <div className="text-center mt-14">
-            <Link
-              href="https://github.com/mhsenam?tab=repositories"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="keycap inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold hover:text-primary"
-            >
-              <span className="tok-comment">$</span> cd projects/ && ls -la
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* GitHub Repos Section */}
-      <section className="relative py-28 px-4">
-        <div className="container mx-auto max-w-7xl">
-          <div className="text-center mb-14">
-            <span className="eyebrow mb-4">open source</span>
-            <h2 className="text-3xl md:text-5xl font-bold font-mono tracking-tight mt-4">
-              git log <span className="text-primary">--recent</span>
-            </h2>
-          </div>
           {/* Streams in after the rest of the page: the GitHub API round-trip
               no longer blocks the HTML from being sent. */}
           <Suspense fallback={<ReposSkeleton />}>
@@ -276,8 +217,11 @@ export default async function Home() {
 /** Placeholder streamed while the GitHub API round-trip resolves. */
 function ReposSkeleton() {
   return (
-    <div className="grid gap-5 md:grid-cols-3" aria-hidden="true">
-      {[0, 1, 2].map((i) => (
+    <div
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      aria-hidden="true"
+    >
+      {[0, 1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="term p-5">
           <div className="h-4 w-2/3 rounded bg-muted animate-pulse" />
           <div className="mt-3 h-3 w-full rounded bg-muted/60 animate-pulse" />
